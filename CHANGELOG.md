@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-06-20
+## [1.1.0] - 2026-06-21
 
 ### Added
 - Attribute-driven module wiring: `#[Bind]`, `#[Listen]`, and an optional
@@ -31,5 +31,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (Pest + Testbench), PHPStan (Larastan) config, Pint config, and a
   GitHub Actions CI workflow.
 
-[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/dem1-off/laravel-modular/releases/tag/v1.0.0
+[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/dem1-off/laravel-modular/releases/tag/v1.1.0

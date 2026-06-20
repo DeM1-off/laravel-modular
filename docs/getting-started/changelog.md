@@ -5,7 +5,7 @@ All notable changes are tracked in
 following [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
-## 1.0.0 — 2026-06-20
+## 1.1.0 — 2026-06-21
 
 ### Added
 - Attribute-driven wiring: `#[Bind]`, `#[Listen]`, optional `#[Module]`.
