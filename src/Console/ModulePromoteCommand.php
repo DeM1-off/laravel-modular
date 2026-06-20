@@ -28,7 +28,9 @@ final class ModulePromoteCommand extends Command
 
     public function handle(ModuleManager $manager): int
     {
-        $module = Str::studly((string) $this->argument('module'));
+        /** @var string $moduleArg */
+        $moduleArg = $this->argument('module');
+        $module = Str::studly($moduleArg);
         $descriptor = $manager->find($module);
 
         if ($descriptor === null) {
@@ -49,7 +51,10 @@ final class ModulePromoteCommand extends Command
         $composer = json_decode($this->files->get($composerFile), true) ?? [];
         $package = $composer['name'] ?? Str::kebab($module).'-module';
 
-        if ($export = $this->option('export')) {
+        /** @var string|null $export */
+        $export = $this->option('export');
+
+        if ($export !== null && $export !== '') {
             $this->files->copyDirectory($descriptor->path(), $export);
             $this->components->info("Copied {$module} to {$export} (original left in place).");
         }

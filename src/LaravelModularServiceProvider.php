@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dem1Off\LaravelModular;
 
+use Composer\Autoload\ClassLoader;
 use Dem1Off\LaravelModular\Console\Generators\MakeActionCommand;
 use Dem1Off\LaravelModular\Console\Generators\MakeControllerCommand;
 use Dem1Off\LaravelModular\Console\Generators\MakeMigrationCommand;
@@ -43,7 +44,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
 
         $this->loadCompiled();
 
-        if ((bool) $this->app['config']->get('modules.autoload', true)) {
+        if ((bool) config('modules.autoload', true)) {
             $this->registerModuleAutoloading();
         }
 
@@ -80,6 +81,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
         }
 
         // Run module:cache/clear alongside `php artisan optimize`/`optimize:clear`.
+        // @phpstan-ignore function.alreadyNarrowedType (optimizes() is absent on older Laravel 11)
         if (method_exists($this, 'optimizes')) {
             $this->optimizes('module:cache', 'module:clear', 'modules');
         }
@@ -115,11 +117,14 @@ final class LaravelModularServiceProvider extends ServiceProvider
             return;
         }
 
-        /** @var \Composer\Autoload\ClassLoader $loader */
+        /** @var ClassLoader $loader */
         $loader = require $autoload;
 
-        $namespace = (string) $this->app['config']->get('modules.namespace');
-        $appFolder = trim((string) $this->app['config']->get('modules.paths.app_folder', 'src/'), '/');
+        /** @var string $namespace */
+        $namespace = config('modules.namespace');
+        /** @var string $appFolderConfig */
+        $appFolderConfig = config('modules.paths.app_folder', 'src/');
+        $appFolder = trim($appFolderConfig, '/');
 
         foreach ($this->app->make(ModuleManager::class)->all() as $module) {
             $root = $namespace.'\\'.$module->name.'\\';
@@ -155,6 +160,6 @@ final class LaravelModularServiceProvider extends ServiceProvider
 
     private function shouldAutoDiscover(): bool
     {
-        return (bool) $this->app['config']->get('modules.auto_discover', true);
+        return (bool) config('modules.auto_discover', true);
     }
 }

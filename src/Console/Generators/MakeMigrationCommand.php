@@ -22,7 +22,9 @@ final class MakeMigrationCommand extends Command
 
     public function handle(ModuleManager $manager): int
     {
-        $module = Str::studly((string) $this->argument('module'));
+        /** @var string $moduleArg */
+        $moduleArg = $this->argument('module');
+        $module = Str::studly($moduleArg);
 
         if (! $manager->has($module)) {
             $this->components->error("Module [{$module}] not found.");
@@ -30,8 +32,13 @@ final class MakeMigrationCommand extends Command
             return self::FAILURE;
         }
 
-        $name = Str::snake((string) $this->argument('name'));
-        $table = (string) ($this->option('table') ?: $name);
+        /** @var string $nameArg */
+        $nameArg = $this->argument('name');
+        $name = Str::snake($nameArg);
+
+        /** @var string|null $tableOption */
+        $tableOption = $this->option('table');
+        $table = $tableOption ?: $name;
         $dir = $manager->path($module).'/database/migrations';
         $file = $dir.'/'.date('Y_m_d_His').'_'.$name.'.php';
 

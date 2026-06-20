@@ -39,7 +39,9 @@ abstract class ModuleGeneratorCommand extends Command
 
     public function handle(ModuleManager $manager): int
     {
-        $module = Str::studly((string) $this->argument('module'));
+        /** @var string $moduleArg */
+        $moduleArg = $this->argument('module');
+        $module = Str::studly($moduleArg);
 
         if (! $manager->has($module)) {
             $this->components->error("Module [{$module}] not found.");
@@ -47,7 +49,9 @@ abstract class ModuleGeneratorCommand extends Command
             return self::FAILURE;
         }
 
-        $class = $this->qualifyClass((string) $this->argument('name'));
+        /** @var string $nameArg */
+        $nameArg = $this->argument('name');
+        $class = $this->qualifyClass($nameArg);
         $appFolder = trim((string) config('modules.paths.app_folder', 'src/'), '/');
         $dir = $manager->path($module).'/'.$appFolder.'/'.$this->layerPath();
         $file = $dir.'/'.$class.'.php';

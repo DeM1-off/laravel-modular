@@ -45,11 +45,11 @@ final class AttributeParser
 
         return [
             'name' => $module?->name,
-            'config' => $module?->config ?? true,
-            'migrations' => $module?->migrations ?? true,
-            'views' => $module?->views ?? true,
-            'routes' => $module?->routes ?? true,
-            'commands' => $module?->commands ?? [],
+            'config' => $module === null ? true : $module->config,
+            'migrations' => $module === null ? true : $module->migrations,
+            'views' => $module === null ? true : $module->views,
+            'routes' => $module === null ? true : $module->routes,
+            'commands' => $module === null ? [] : $module->commands,
             'binds' => $binds,
             'listens' => $listens,
         ];

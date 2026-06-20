@@ -2,4 +2,7 @@
 /node_modules
 /docs/.vitepress/dist
 /docs/.vitepress/cache
+/build
+composer.lock
 .DS_Store
+.phpunit.result.cache

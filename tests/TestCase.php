@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dem1Off\LaravelModular\Tests;
 
 use Dem1Off\LaravelModular\LaravelModularServiceProvider;
+use Dem1Off\LaravelModular\Manager\ModuleManager;
 use Illuminate\Filesystem\Filesystem;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -24,6 +25,11 @@ abstract class TestCase extends Orchestra
         (new Filesystem)->ensureDirectoryExists($this->modulesPath);
 
         parent::setUp();
+
+        // The manager may have been resolved during boot with the default config
+        // (before the test environment paths were applied). Drop it so tests get
+        // a fresh instance bound to the temp paths.
+        $this->app->forgetInstance(ModuleManager::class);
     }
 
     protected function tearDown(): void
@@ -44,5 +50,8 @@ abstract class TestCase extends Orchestra
         $app['config']->set('modules.statuses_file', $this->statusesFile);
         // Providers are registered explicitly in tests, not auto-discovered.
         $app['config']->set('modules.auto_discover', false);
+        // Don't resolve the manager during boot: fixtures are created per test
+        // (after boot), so discovery must stay lazy.
+        $app['config']->set('modules.autoload', false);
     }
 }

@@ -24,7 +24,9 @@ final class ModuleMakeCommand extends Command
 
     public function handle(ModuleManager $manager): int
     {
-        $module = Str::studly($this->argument('name'));
+        /** @var string $name */
+        $name = $this->argument('name');
+        $module = Str::studly($name);
         $path = config('modules.paths.modules').DIRECTORY_SEPARATOR.$module;
 
         if ($this->files->isDirectory($path) && ! $this->option('force')) {

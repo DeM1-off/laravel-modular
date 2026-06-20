@@ -16,7 +16,9 @@ final class ModuleEnableCommand extends Command
 
     public function handle(ModuleManager $manager): int
     {
-        $name = Str::studly($this->argument('module'));
+        /** @var string $argument */
+        $argument = $this->argument('module');
+        $name = Str::studly($argument);
 
         if (! $manager->has($name)) {
             $this->components->error("Module [{$name}] not found.");

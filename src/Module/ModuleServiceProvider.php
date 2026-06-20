@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dem1Off\LaravelModular\Module;
 
 use Dem1Off\LaravelModular\Manager\ModuleManager;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -69,7 +70,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
         }
 
         foreach ($settings['listens'] as $listen) {
-            $this->app['events']->listen($listen['event'], $listen['listener']);
+            Event::listen($listen['event'], $listen['listener']);
         }
 
         if ($settings['commands'] !== [] && $this->app->runningInConsole()) {
@@ -152,10 +153,15 @@ abstract class ModuleServiceProvider extends ServiceProvider
      */
     private function scanProvides(): array
     {
+        /** @var string $namespace */
+        $namespace = config('modules.namespace');
+        /** @var string $appFolder */
+        $appFolder = config('modules.paths.app_folder', 'src/');
+
         return $this->app->make(ProvidesScanner::class)->scan(
             module_path($this->name()),
-            config('modules.namespace').'\\'.$this->name(),
-            (string) config('modules.paths.app_folder', 'src/'),
+            $namespace.'\\'.$this->name(),
+            $appFolder,
         );
     }
 

@@ -85,7 +85,9 @@ final class ModuleManager
 
     public function isEnabled(string $name): bool
     {
-        return $this->find($name)?->enabled ?? false;
+        $module = $this->find($name);
+
+        return $module !== null && $module->enabled;
     }
 
     /**
@@ -102,7 +104,7 @@ final class ModuleManager
         return $module->path;
     }
 
-     /**
+    /**
      * Enable or disable a module by writing the statuses file.
      */
     public function setStatus(string $name, bool $enabled): void
