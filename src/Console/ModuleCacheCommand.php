@@ -24,12 +24,13 @@ final class ModuleCacheCommand extends Command
         $appFolder = (string) config('modules.paths.app_folder', 'src/');
 
         foreach ($manager->enabled() as $module) {
-            $provides = $scanner->scan($module->path, $namespace.'\\'.$module->name, $appFolder);
+            $scanned = $scanner->scan($module->path, $namespace.'\\'.$module->name, $appFolder);
 
             foreach ($module->providers as $provider) {
                 if (class_exists($provider) && is_subclass_of($provider, ModuleServiceProvider::class)) {
                     $parsed = AttributeParser::parse($provider);
-                    $parsed['binds'] = array_merge($parsed['binds'], $provides);
+                    $parsed['binds'] = array_merge($parsed['binds'], $scanned['binds']);
+                    $parsed['tags'] = array_merge($parsed['tags'], $scanned['tags']);
                     $settings[$provider] = $parsed;
                 }
             }

@@ -30,9 +30,11 @@ final class Provides
 {
     /**
      * @param  class-string|null  $abstract
+     * @param  string|null  $tag  Also tag the concrete so it resolves via app()->tagged($tag).
      */
     public function __construct(
         public ?string $abstract = null,
         public bool $singleton = false,
+        public ?string $tag = null,
     ) {}
 }

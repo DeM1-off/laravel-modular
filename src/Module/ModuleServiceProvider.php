@@ -22,6 +22,8 @@ use Illuminate\Support\Str;
  * cache it reflects once per provider and memoises the result.
  *
  * @phpstan-import-type Settings from AttributeParser
+ * @phpstan-import-type Bindings from AttributeParser
+ * @phpstan-import-type Tags from AttributeParser
  */
 abstract class ModuleServiceProvider extends ServiceProvider
 {
@@ -38,10 +40,25 @@ abstract class ModuleServiceProvider extends ServiceProvider
             return;
         }
 
-        foreach ($this->bindings() as $bind) {
-            $bind['singleton']
-                ? $this->app->singleton($bind['abstract'], $bind['concrete'])
-                : $this->app->bind($bind['abstract'], $bind['concrete']);
+        $wiring = $this->wiring();
+
+        foreach ($wiring['binds'] as $bind) {
+            if ($bind['lifetime'] === 'singleton') {
+                $this->app->singleton($bind['abstract'], $bind['concrete']);
+            } elseif ($bind['lifetime'] === 'scoped') {
+                $this->app->scoped($bind['abstract'], $bind['concrete']);
+            } else {
+                $this->app->bind($bind['abstract'], $bind['concrete']);
+            }
+        }
+
+        $grouped = [];
+        foreach ($wiring['tags'] as $tag) {
+            $grouped[$tag['tag']][] = $tag['concrete'];
+        }
+
+        foreach ($grouped as $name => $concretes) {
+            $this->app->tag($concretes, $name);
         }
     }
 
@@ -71,6 +88,10 @@ abstract class ModuleServiceProvider extends ServiceProvider
 
         foreach ($settings['listens'] as $listen) {
             Event::listen($listen['event'], $listen['listener']);
+        }
+
+        foreach ($settings['middleware'] as $middleware) {
+            Route::aliasMiddleware($middleware['name'], $middleware['class']);
         }
 
         if ($settings['commands'] !== [] && $this->app->runningInConsole()) {
@@ -131,25 +152,29 @@ abstract class ModuleServiceProvider extends ServiceProvider
     }
 
     /**
-     * Container bindings to apply: provider #[Bind] attributes, plus #[Provides]
-     * implementations discovered by scanning. Scanning only runs uncompiled —
-     * the compiled cache already folds #[Provides] into the settings.
+     * Bindings and tags to apply: provider attributes plus #[Provides]/#[Singleton]
+     * /#[Scoped] implementations found by scanning. Scanning only runs uncompiled
+     * — the compiled cache already folds them into the settings.
      *
-     * @return list<array{abstract: class-string, concrete: class-string, singleton: bool}>
+     * @return array{binds: Bindings, tags: Tags}
      */
-    private function bindings(): array
+    private function wiring(): array
     {
-        $binds = $this->settings()['binds'];
+        $settings = $this->settings();
+        $binds = $settings['binds'];
+        $tags = $settings['tags'];
 
         if ($this->compiledSettings() === null && (bool) config('modules.scan_bindings', true)) {
-            $binds = array_merge($binds, $this->scanProvides());
+            $scanned = $this->scanProvides();
+            $binds = array_merge($binds, $scanned['binds']);
+            $tags = array_merge($tags, $scanned['tags']);
         }
 
-        return $binds;
+        return ['binds' => $binds, 'tags' => $tags];
     }
 
     /**
-     * @return list<array{abstract: class-string, concrete: class-string, singleton: bool}>
+     * @return array{binds: Bindings, tags: Tags}
      */
     private function scanProvides(): array
     {
