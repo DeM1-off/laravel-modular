@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --prefer-dist --no-interaction --prefer-stable
+          composer update --prefer-dist --no-interaction --prefer-stable --no-audit
 
       - name: Run tests
         run: vendor/bin/pest
@@ -46,7 +46,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --prefer-stable
+        run: composer update --prefer-dist --no-interaction --prefer-stable --no-audit
 
       - name: PHPStan
         run: vendor/bin/phpstan analyse --no-progress
