@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `#[Singleton]` and `#[Scoped]` lifetime shorthands for auto-binding.
+- `#[Provides(tag:)]` to tag implementations, resolvable via `app()->tagged()`.
+- `#[Middleware]` to register a route middleware alias from a provider.
+
 ## [1.1.0] - 2026-06-21
 
 ### Added

@@ -81,6 +81,48 @@ to the code they bind. It's compiled, so it costs nothing in production (see
 | `#[Bind]` | the provider | you want the wiring listed in one place |
 | `#[Provides]` | the implementation | you want bindings co-located with the class |
 
+## Lifetime shorthands
+
+On an implementation, `#[Singleton]` and `#[Scoped]` are shorter forms of
+`#[Provides]` with a lifetime:
+
+```php
+#[Singleton]                       // shared instance, abstract inferred
+final class RedisFeedCache implements FeedCache {}
+
+#[Scoped(RequestContext::class)]   // one per request/job
+final class HttpRequestContext implements RequestContext {}
+```
+
+## Tagged collections
+
+Tag implementations with `#[Provides(tag:)]` and resolve them as a group:
+
+```php
+#[Provides(Report::class, tag: 'reports')]
+final class SalesReport implements Report {}
+
+#[Provides(Report::class, tag: 'reports')]
+final class RefundsReport implements Report {}
+```
+
+```php
+$reports = app()->tagged('reports'); // iterable of both
+```
+
+## Route middleware
+
+Register a middleware alias from the provider with `#[Middleware]`:
+
+```php
+#[Middleware('blog.subscriber', EnsureSubscriber::class)]
+final class BlogServiceProvider extends ModuleServiceProvider {}
+```
+
+```php
+Route::middleware('blog.subscriber')->get(...);
+```
+
 ## `#[Listen]`
 
 Registers an event listener. Repeatable.
