@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://dem1-off.github.io/laravel-modular/
+    about: Read the docs before opening an issue.
+  - name: Questions & discussions
+    url: https://github.com/dem1-off/laravel-modular/discussions
+    about: Ask usage questions here instead of the issue tracker.

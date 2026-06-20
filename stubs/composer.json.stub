@@ -1,0 +1,30 @@
+{
+    "name": "{{ vendor }}/{{ module_kebab }}-module",
+    "type": "laravel-module",
+    "description": "{{ module }} module",
+    "license": "MIT",
+    "require": {},
+    "require-dev": {},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "{{ provider_fqcn }}"
+            ],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace }}\\{{ module }}\\": "{{ src_path }}",
+            "{{ namespace }}\\{{ module }}\\Database\\Factories\\": "database/factories/",
+            "{{ namespace }}\\{{ module }}\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace }}\\{{ module }}\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

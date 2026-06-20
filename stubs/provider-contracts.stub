@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ provider_namespace }};
+
+use Dem1Off\LaravelModular\Module\ModuleServiceProvider;
+
+/**
+ * Contracts (shared-kernel) module: holds only interfaces, DTOs, events and
+ * enums shared between modules. It registers nothing — other modules bind
+ * implementations to these contracts and depend on the abstractions.
+ */
+final class {{ module }}ServiceProvider extends ModuleServiceProvider {}

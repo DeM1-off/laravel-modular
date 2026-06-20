@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ provider_namespace }};
+
+use Dem1Off\LaravelModular\Module\ModuleServiceProvider;
+
+/**
+ * Config, migrations, views and routes load by convention (when the folders
+ * exist) — nothing to declare.
+ *
+ * Wire the container with attributes, e.g.:
+ *
+ *   #[Bind(PostRepositoryInterface::class, EloquentPostRepository::class)]
+ *   #[Listen(ChapterPublished::class, SendDigest::class)]
+ *
+ * Swapping a #[Bind] implementation is all it takes to extract this module into
+ * a service later — callers depend only on the interface.
+ */
+final class {{ module }}ServiceProvider extends ModuleServiceProvider {}

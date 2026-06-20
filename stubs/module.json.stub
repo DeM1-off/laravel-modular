@@ -1,0 +1,11 @@
+{
+    "name": "{{ module }}",
+    "alias": "{{ module_lower }}",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "{{ provider_fqcn }}"
+    ],
+    "files": []
+}
