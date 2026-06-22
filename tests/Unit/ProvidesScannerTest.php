@@ -58,3 +58,26 @@ it('collects #[Provides(tag:)] into tags', function () {
         'lifetime' => 'bind',
     ]);
 });
+
+it('caches scan results to a file', function () {
+    $cacheFile = sys_get_temp_dir().'/lm-scan-'.uniqid().'.php';
+    $scanner = new ProvidesScanner(new Filesystem, $cacheFile);
+
+    $first = $scanner->scan(
+        __DIR__.'/../Fixtures/ProvidesSample',
+        'Dem1Off\\LaravelModular\\Tests\\Fixtures\\ProvidesSample',
+        '',
+    );
+
+    expect(file_exists($cacheFile))->toBeTrue();
+
+    $second = $scanner->scan(
+        __DIR__.'/../Fixtures/ProvidesSample',
+        'Dem1Off\\LaravelModular\\Tests\\Fixtures\\ProvidesSample',
+        '',
+    );
+
+    expect($second)->toBe($first);
+
+    @unlink($cacheFile);
+});

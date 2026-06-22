@@ -9,6 +9,7 @@ use Dem1Off\LaravelModular\Module\Attributes\Scoped;
 use Dem1Off\LaravelModular\Module\Attributes\Singleton;
 use Illuminate\Filesystem\Filesystem;
 use ReflectionClass;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Finds auto-binding attributes (#[Provides], #[Singleton], #[Scoped]) in a
@@ -16,17 +17,25 @@ use ReflectionClass;
  *
  * Runs in development (lazily, over the module's own files) and at compile time
  * for `module:cache` — the same logic feeds both, so dev and production agree.
+ * In development the result is memoised to a small file keyed by the module's
+ * file count and newest mtime, so unchanged modules aren't re-reflected each
+ * request.
  *
  * @phpstan-import-type Bindings from AttributeParser
  * @phpstan-import-type Tags from AttributeParser
+ *
+ * @phpstan-type ScanResult array{binds: Bindings, tags: Tags}
  */
 final class ProvidesScanner
 {
-    public function __construct(private readonly Filesystem $files) {}
+    public function __construct(
+        private readonly Filesystem $files,
+        private readonly ?string $cachePath = null,
+    ) {}
 
     /**
      * @param  string  $rootNamespace  e.g. "Modules\Blog"
-     * @return array{binds: Bindings, tags: Tags}
+     * @return ScanResult
      */
     public function scan(string $modulePath, string $rootNamespace, string $appFolder): array
     {
@@ -36,16 +45,46 @@ final class ProvidesScanner
             return ['binds' => [], 'tags' => []];
         }
 
+        $phpFiles = array_filter(
+            $this->files->allFiles($base),
+            static fn ($file): bool => $file->getExtension() === 'php',
+        );
+
+        $signature = $this->signature($phpFiles);
+        $cache = $this->readCache();
+
+        if (isset($cache[$base]) && $cache[$base]['signature'] === $signature) {
+            return $cache[$base]['result'];
+        }
+
+        $result = $this->reflect($phpFiles, $rootNamespace, $base);
+
+        $this->writeCache($base, $signature, $result, $cache);
+
+        return $result;
+    }
+
+    public function clearCache(): void
+    {
+        if ($this->cachePath !== null && $this->files->exists($this->cachePath)) {
+            $this->files->delete($this->cachePath);
+        }
+    }
+
+    /**
+     * @param  array<int, SplFileInfo>  $files
+     * @return ScanResult
+     */
+    private function reflect(array $files, string $rootNamespace, string $base): array
+    {
         $binds = [];
         $tags = [];
 
-        foreach ($this->files->allFiles($base) as $file) {
-            if ($file->getExtension() !== 'php') {
-                continue;
-            }
+        foreach ($files as $file) {
+            $relative = ltrim(substr($file->getPathname(), strlen($base)), '/\\');
 
             /** @var class-string $class */
-            $class = $rootNamespace.'\\'.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+            $class = $rootNamespace.'\\'.str_replace(['/', '.php'], ['\\', ''], $relative);
 
             if (! class_exists($class)) {
                 continue;
@@ -106,5 +145,52 @@ final class ProvidesScanner
         $interfaces = $reflection->getInterfaceNames();
 
         return count($interfaces) === 1 ? $interfaces[0] : null;
+    }
+
+    /**
+     * Newest mtime plus file count: changes on edit, add or delete.
+     *
+     * @param  array<int, SplFileInfo>  $files
+     */
+    private function signature(array $files): string
+    {
+        $newest = 0;
+
+        foreach ($files as $file) {
+            $newest = max($newest, (int) $file->getMTime());
+        }
+
+        return $newest.':'.count($files);
+    }
+
+    /**
+     * @return array<string, array{signature: string, result: ScanResult}>
+     */
+    private function readCache(): array
+    {
+        if ($this->cachePath === null || ! $this->files->exists($this->cachePath)) {
+            return [];
+        }
+
+        /** @var array<string, array{signature: string, result: ScanResult}> $cache */
+        $cache = require $this->cachePath;
+
+        return $cache;
+    }
+
+    /**
+     * @param  ScanResult  $result
+     * @param  array<string, array{signature: string, result: ScanResult}>  $cache
+     */
+    private function writeCache(string $base, string $signature, array $result, array $cache): void
+    {
+        if ($this->cachePath === null) {
+            return;
+        }
+
+        $cache[$base] = ['signature' => $signature, 'result' => $result];
+
+        $this->files->ensureDirectoryExists(dirname($this->cachePath));
+        $this->files->put($this->cachePath, '<?php return '.var_export($cache, true).';'.PHP_EOL);
     }
 }

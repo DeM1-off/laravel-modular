@@ -76,3 +76,17 @@ it('resolves a module path and throws for unknown modules', function () {
 
     $manager->path('Ghost');
 })->throws(RuntimeException::class);
+
+it('orders modules by priority then name', function () {
+    $this->files->ensureDirectoryExists($this->base.'/Zeta');
+    $this->files->put($this->base.'/Zeta/module.json', json_encode([
+        'name' => 'Zeta',
+        'priority' => 10,
+        'providers' => [],
+    ]));
+
+    $manager = makeManager($this->base, $this->files);
+
+    // Zeta (priority 10) first; Blog and Shop (priority 0) alphabetical.
+    expect(array_keys($manager->all()))->toBe(['Zeta', 'Blog', 'Shop']);
+});

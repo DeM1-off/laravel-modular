@@ -9,7 +9,8 @@
 | `module:enable {module}` | Enable a module (writes `modules_statuses.json`). |
 | `module:disable {module}` | Disable a module. |
 | `module:cache` | Compile discovery + attributes into a fast cache (see [Performance](/advanced/performance)). |
-| `module:clear` | Remove the compiled cache. |
+| `module:clear` | Remove the compiled cache (and the dev scan cache). |
+| `module:check` | Diagnose the setup: autoload mode, cache status, missing providers, binding conflicts. |
 | `module:promote {module} [--export=PATH]` | Print the promotion plan; `--export` copies the module out (non-destructive). |
 
 ## In-module generators

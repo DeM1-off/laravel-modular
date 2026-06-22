@@ -19,6 +19,7 @@ final readonly class ModuleDescriptor
         public array $providers,
         public ?string $alias = null,
         public ?string $description = null,
+        public int $priority = 0,
     ) {}
 
     public function path(string $sub = ''): string

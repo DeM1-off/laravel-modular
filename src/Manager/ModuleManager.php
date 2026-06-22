@@ -58,7 +58,8 @@ final class ModuleManager
             $modules[$descriptor->name] = $descriptor;
         }
 
-        ksort($modules);
+        // Higher priority first, then alphabetical — controls provider load order.
+        uasort($modules, static fn (ModuleDescriptor $a, ModuleDescriptor $b): int => [$b->priority, $a->name] <=> [$a->priority, $b->name]);
 
         return $this->cache = $modules;
     }
@@ -134,7 +135,7 @@ final class ModuleManager
     /**
      * Hydrate from the compiled cache so all()/enabled() skip the filesystem.
      *
-     * @param  array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias?: string|null, description?: string|null}>  $modules
+     * @param  array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias?: string|null, description?: string|null, priority?: int}>  $modules
      */
     public function useCompiled(array $modules): void
     {
@@ -148,6 +149,7 @@ final class ModuleManager
                 providers: $module['providers'],
                 alias: $module['alias'] ?? null,
                 description: $module['description'] ?? null,
+                priority: $module['priority'] ?? 0,
             );
         }
 
@@ -157,7 +159,7 @@ final class ModuleManager
     /**
      * Serialisable array form of every module, for the compiled cache.
      *
-     * @return array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias: string|null, description: string|null}>
+     * @return array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias: string|null, description: string|null, priority: int}>
      */
     public function toArray(): array
     {
@@ -171,6 +173,7 @@ final class ModuleManager
                 'providers' => $module->providers,
                 'alias' => $module->alias,
                 'description' => $module->description,
+                'priority' => $module->priority,
             ];
         }
 
@@ -193,6 +196,7 @@ final class ModuleManager
             providers: array_values($providers),
             alias: $manifest['alias'] ?? null,
             description: $manifest['description'] ?? ($composer['description'] ?? null),
+            priority: (int) ($manifest['priority'] ?? 0),
         );
     }
 

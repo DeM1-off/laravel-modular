@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[Singleton]` and `#[Scoped]` lifetime shorthands for auto-binding.
 - `#[Provides(tag:)]` to tag implementations, resolvable via `app()->tagged()`.
 - `#[Middleware]` to register a route middleware alias from a provider.
+- Module load order via `module.json` `priority` (higher loads first).
+- `module:check` doctor command (autoload mode, cache status, missing providers,
+  binding conflicts).
+- Development scan cache for `#[Provides]` (keyed by file count + mtime), cleared
+  by `module:clear`.
+
+### Changed
+- A disabled module is now fully inert: its PSR-4 is not registered at runtime,
+  so its classes don't autoload either.
 
 ## [1.1.0] - 2026-06-21
 

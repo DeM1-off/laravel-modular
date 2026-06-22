@@ -26,5 +26,30 @@ After publishing, the package reads `config/modules.php`.
 ```
 
 A module with no entry defaults to **enabled**, so a freshly generated module is
-live immediately. A disabled module is skipped at registration and also
-self-guards inside its service provider.
+live immediately. A **disabled** module is fully inert — its providers aren't
+registered and (in runtime-autoload mode) its classes aren't even autoloaded.
+
+Toggle from the CLI instead of editing the file by hand:
+
+```bash
+php artisan module:enable Shop
+php artisan module:disable Shop
+```
+
+## Load order
+
+Set `"priority"` in a module's `module.json` to control registration order —
+higher loads first, ties break alphabetically:
+
+```json
+{ "name": "Core", "priority": 100 }
+```
+
+Useful when one module must boot before another. Prefer
+[contract modules](/basic-usage/contract-modules) over ordering where possible —
+lazy bindings don't care about order.
+
+## Diagnosing
+
+`php artisan module:check` reports the autoload mode, cache status, any providers
+that aren't autoloadable, and binding conflicts between modules.
