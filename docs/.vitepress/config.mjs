@@ -23,9 +23,10 @@ export default defineConfig({
       { text: 'Guide', link: '/getting-started/introduction', activeMatch: '/' },
       {
         // Version dropdown — add older versions here as the package evolves.
-        text: 'v1.0',
+        text: 'v1.2',
         items: [
-          { text: '1.0 (current)', link: '/getting-started/introduction' },
+          { text: '1.2 (current)', link: '/getting-started/introduction' },
+          { text: 'Changelog', link: '/getting-started/changelog' },
         ],
       },
     ],

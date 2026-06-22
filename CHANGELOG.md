@@ -7,19 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-22
+
 ### Added
 - `#[Singleton]` and `#[Scoped]` lifetime shorthands for auto-binding.
 - `#[Provides(tag:)]` to tag implementations, resolvable via `app()->tagged()`.
 - `#[Middleware]` to register a route middleware alias from a provider.
-- Module load order via `module.json` `priority` (higher loads first).
-- `module:check` doctor command (autoload mode, cache status, missing providers,
-  binding conflicts).
-- Development scan cache for `#[Provides]` (keyed by file count + mtime), cleared
-  by `module:clear`.
+- Module load order via the `module.json` `priority` field (higher loads first,
+  ties broken alphabetically).
+- `module:check` doctor command — reports autoload mode, cache status,
+  non-autoloadable providers, and binding conflicts between modules.
+- Development scan cache for `#[Provides]` (keyed by file count + newest mtime),
+  cleared by `module:clear`.
 
 ### Changed
-- A disabled module is now fully inert: its PSR-4 is not registered at runtime,
-  so its classes don't autoload either.
+- A disabled module is now fully inert: its PSR-4 namespace is not registered at
+  runtime, so its classes no longer autoload either.
+
+### Fixed
+- Ship the package service provider and the `module:clear` command, which were
+  missing from version control — a fresh install could not autoload the provider.
 
 ## [1.1.0] - 2026-06-21
 
@@ -45,5 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (Pest + Testbench), PHPStan (Larastan) config, Pint config, and a
   GitHub Actions CI workflow.
 
-[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/dem1-off/laravel-modular/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/dem1-off/laravel-modular/releases/tag/v1.1.0
