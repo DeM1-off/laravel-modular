@@ -8,3 +8,6 @@ composer.lock
 .phpunit.result.cache
 .idea/
 .vscode/
+
+# Claude Code — share the slash command, keep personal settings local
+/.claude/settings.local.json
