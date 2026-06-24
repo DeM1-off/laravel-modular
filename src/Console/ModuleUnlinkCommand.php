@@ -18,6 +18,7 @@ final class ModuleUnlinkCommand extends ModuleLinkingCommand
         {modules?* : Modules to restore to a versioned package (omit and pass --all for every module)}
         {--all : Unlink every module}
         {--constraint= : Version to pin instead of the recorded one (e.g. ^1.3)}
+        {--hide-git : Restore git tracking of composer.json/lock (reverse of link --hide-git)}
         {--dry-run : Show the composer.json changes without writing them}';
 
     protected $description = 'Restore module(s) from local path development to a versioned package';
@@ -53,6 +54,12 @@ final class ModuleUnlinkCommand extends ModuleLinkingCommand
         }
 
         $operation->commit();
+
+        if ((bool) $this->option('hide-git')) {
+            $this->toggleGitVisibility(false)
+                ? $this->components->info('Git tracking restored: composer.json, composer.lock')
+                : $this->components->warn('Could not restore git tracking (not a repo, or git unavailable).');
+        }
 
         $this->components->info('Unlinked: '.implode(', ', $result->packages));
         $this->newLine();

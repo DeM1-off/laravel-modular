@@ -55,3 +55,21 @@ jobs:
 
       - name: Pint (dry run)
         run: vendor/bin/pint --test
+
+  security:
+    runs-on: ubuntu-latest
+    name: Security audit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --prefer-stable --no-audit
+
+      - name: Composer audit
+        run: composer audit

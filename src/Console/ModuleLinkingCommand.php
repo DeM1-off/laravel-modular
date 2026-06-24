@@ -7,6 +7,7 @@ namespace Dem1Off\LaravelModular\Console;
 use Dem1Off\LaravelModular\Manager\ModuleDescriptor;
 use Dem1Off\LaravelModular\Manager\ModuleManager;
 use Dem1Off\LaravelModular\Operations\ComposerManifest;
+use Dem1Off\LaravelModular\Operations\HideFromGit;
 use Dem1Off\LaravelModular\Operations\LinkState;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
@@ -90,5 +91,61 @@ abstract class ModuleLinkingCommand extends Command
             : $modulesPath;
 
         return ($relative === '' ? '.' : str_replace('\\', '/', $relative)).'/*';
+    }
+
+    /**
+     * Hide (or reveal) the manifest files that linking mutates from git, so a
+     * project's diff shows only real code changes while modules are linked.
+     * Returns false when git is unavailable or the files are not tracked.
+     */
+    protected function toggleGitVisibility(bool $hide): bool
+    {
+        $paths = $this->gitNoisePaths();
+        $git = new HideFromGit($this->gitRunner());
+
+        return $hide ? $git->hide($paths) : $git->reveal($paths);
+    }
+
+    /**
+     * Tracked files that linking rewrites — composer.lock only when it exists.
+     *
+     * @return list<string>
+     */
+    private function gitNoisePaths(): array
+    {
+        $paths = ['composer.json'];
+
+        if ($this->files->exists($this->laravel->basePath('composer.lock'))) {
+            $paths[] = 'composer.lock';
+        }
+
+        return $paths;
+    }
+
+    /**
+     * A dependency-free `git` runner rooted at the project base path.
+     *
+     * @return \Closure(list<string>): bool
+     */
+    private function gitRunner(): \Closure
+    {
+        $base = $this->laravel->basePath();
+
+        return static function (array $args) use ($base): bool {
+            $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+            /** @var list<string> $command */
+            $command = ['git', ...$args];
+            $process = @proc_open($command, $descriptors, $pipes, $base);
+
+            if (! is_resource($process)) {
+                return false;
+            }
+
+            foreach ($pipes as $pipe) {
+                fclose($pipe);
+            }
+
+            return proc_close($process) === 0;
+        };
     }
 }

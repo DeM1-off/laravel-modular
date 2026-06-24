@@ -20,14 +20,47 @@ Switch modules between local path development and a versioned Composer package
 
 | Command | Description |
 | --- | --- |
-| `module:link {modules?*} [--all] [--dry-run]` | Point the root `composer.json` at module(s) as local `path` repositories for development. |
-| `module:unlink {modules?*} [--all] [--constraint=] [--dry-run]` | Restore module(s) to a versioned package; `--constraint` pins a version instead of the recorded one. |
+| `module:link {modules?*} [--all] [--hide-git] [--dry-run]` | Point the root `composer.json` at module(s) as local `path` repositories for development. |
+| `module:unlink {modules?*} [--all] [--constraint=] [--hide-git] [--dry-run]` | Restore module(s) to a versioned package; `--constraint` pins a version instead of the recorded one. |
 
 ```bash
 php artisan module:link Blog
 php artisan module:link --all
 php artisan module:unlink Blog --constraint=^1.2
 ```
+
+`--hide-git` sets git's `skip-worktree` bit on `composer.json` and
+`composer.lock` so the linking churn never shows up in `git status` / `git diff`
+while modules are linked. `module:unlink --hide-git` clears the bit again. Your
+real diff then lives only in each module's own repository — see
+[Customising behaviour](/advanced/extending-the-core#the-operations-layer) and
+the linking recipe.
+
+```bash
+php artisan module:link Billing Auth --hide-git   # develop, composer.json stays "clean"
+# ...edit + commit inside each module's repo...
+php artisan module:unlink --all --hide-git        # restore git tracking
+```
+
+## Syncing module packages
+
+When the same modules are shared across several projects as versioned packages,
+`module:sync` brings a project's modules up to the version Composer resolves —
+addressed by **module name**, not package name — and reports what is pinned vs.
+installed before running `composer update`.
+
+| Command | Description |
+| --- | --- |
+| `module:sync {modules?*} [--all] [--check] [--dry-run]` | Report pinned vs installed version for the module package(s), then `composer update` them. `--check` only reports; `--dry-run` passes through to Composer. |
+
+```bash
+php artisan module:sync --check          # just show what would change
+php artisan module:sync Billing Auth     # composer update acme/billing-module acme/auth-module
+php artisan module:sync --all            # sync every required module
+```
+
+Only modules the app actually requires are syncable; a module that has not been
+promoted/required yet is reported as unmanaged and skipped.
 
 ## In-module generators
 

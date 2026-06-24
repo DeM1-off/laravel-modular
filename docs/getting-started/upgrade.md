@@ -25,5 +25,17 @@ touching their modules:
 
 ## Within v1.x
 
-Minor and patch releases are backward compatible. Breaking changes only land in
-the next major (v2) and are listed in the [Changelog](/getting-started/changelog).
+Minor and patch releases are backward compatible for application code — your
+modules, config and the artisan command signatures are unaffected. Breaking
+changes to the public runtime API only land in the next major (v2) and are
+listed in the [Changelog](/getting-started/changelog).
+
+### 1.3.0 — custom generators
+
+1.3.0 moved each command's logic into a console-free
+[Operations layer](/advanced/extending-the-core#the-operations-layer). This is
+invisible to applications, but if you **subclass `ModuleGeneratorCommand`** to
+add a custom generator, replace the old `stub()`, `layerPath()`,
+`layerNamespace()` and `classSuffix()` methods with a single
+`layer(): ClassLayer` — see
+[Custom in-module generators](/advanced/extending-the-core#custom-in-module-generators).
