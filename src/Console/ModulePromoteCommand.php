@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Dem1Off\LaravelModular\Console;
 
 use Dem1Off\LaravelModular\Manager\ModuleManager;
+use Dem1Off\LaravelModular\Operations\CannotPromote;
+use Dem1Off\LaravelModular\Operations\PromoteModule;
 use Illuminate\Console\Command;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
 /**
- * Prints a tailored, copy-pasteable plan to promote a module into a standalone
- * Composer package. Non-destructive by design: it never edits the app's
- * composer.json or runs git. With --export it copies the module out (leaving the
- * original untouched) so you can initialise a repo there.
+ * Thin adapter: parse input, delegate to the PromoteModule use-case, render the
+ * plan. Non-destructive by design (the operation never edits the app or git).
  */
 final class ModulePromoteCommand extends Command
 {
@@ -21,53 +20,38 @@ final class ModulePromoteCommand extends Command
 
     protected $description = 'Show the promotion plan for moving a module into its own package';
 
-    public function __construct(private readonly Filesystem $files)
-    {
-        parent::__construct();
-    }
-
-    public function handle(ModuleManager $manager): int
+    public function handle(ModuleManager $manager, PromoteModule $promote): int
     {
         /** @var string $moduleArg */
         $moduleArg = $this->argument('module');
-        $module = Str::studly($moduleArg);
-        $descriptor = $manager->find($module);
+        $module = $manager->find(Str::studly($moduleArg));
 
-        if ($descriptor === null) {
-            $this->components->error("Module [{$module}] not found.");
-
-            return self::FAILURE;
-        }
-
-        $composerFile = $descriptor->path('composer.json');
-
-        if (! $this->files->exists($composerFile)) {
-            $this->components->error("Module [{$module}] has no composer.json — it cannot be promoted.");
+        if ($module === null) {
+            $this->components->error("Module [{$moduleArg}] not found.");
 
             return self::FAILURE;
         }
 
-        /** @var array{name?: string} $composer */
-        $composer = json_decode($this->files->get($composerFile), true) ?? [];
-        $package = $composer['name'] ?? Str::kebab($module).'-module';
+        try {
+            $plan = $promote->plan($module);
+        } catch (CannotPromote $e) {
+            $this->components->error($e->getMessage());
+
+            return self::FAILURE;
+        }
 
         /** @var string|null $export */
         $export = $this->option('export');
 
         if ($export !== null && $export !== '') {
-            $this->files->copyDirectory($descriptor->path(), $export);
-            $this->components->info("Copied {$module} to {$export} (original left in place).");
+            $promote->export($module, $export);
+            $this->components->info("Copied {$module->name} to {$export} (original left in place).");
         }
 
-        $this->line('');
-        $this->components->info("Promotion plan for {$module} ({$package})");
-        $this->components->bulletList([
-            "1. Move the module to its own repo (e.g. git subtree split --prefix=Modules/{$module} -b {$module}-module).",
-            '2. In the app composer.json, replace the path repository with a vcs/registry entry:',
-            "       \"require\": { \"{$package}\": \"^1.0\" }",
-            "3. composer update {$package}",
-        ]);
-        $this->line('');
+        $this->newLine();
+        $this->components->info("Promotion plan for {$plan->module} ({$plan->package})");
+        $this->components->bulletList($plan->steps());
+        $this->newLine();
         $this->line('Namespace stays the same, so no code changes are needed. See the docs: Promotion.');
 
         return self::SUCCESS;

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Dem1Off\LaravelModular\Console;
 
-use Dem1Off\LaravelModular\Manager\ModuleCache;
-use Dem1Off\LaravelModular\Module\ProvidesScanner;
+use Dem1Off\LaravelModular\Operations\ClearModuleCache;
 use Illuminate\Console\Command;
 
 final class ModuleClearCommand extends Command
@@ -14,10 +13,9 @@ final class ModuleClearCommand extends Command
 
     protected $description = 'Remove the compiled modules cache';
 
-    public function handle(ModuleCache $cache, ProvidesScanner $scanner): int
+    public function handle(ClearModuleCache $clear): int
     {
-        $cache->clear();
-        $scanner->clearCache();
+        $clear->execute();
 
         $this->components->info('Module cache cleared.');
 
