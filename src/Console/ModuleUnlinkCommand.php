@@ -17,7 +17,7 @@ final class ModuleUnlinkCommand extends ModuleLinkingCommand
     protected $signature = 'module:unlink
         {modules?* : Modules to restore to a versioned package (omit and pass --all for every module)}
         {--all : Unlink every module}
-        {--constraint= : Version to pin instead of the recorded one (e.g. ^1.2)}
+        {--constraint= : Version to pin instead of the recorded one (e.g. ^1.3)}
         {--dry-run : Show the composer.json changes without writing them}';
 
     protected $description = 'Restore module(s) from local path development to a versioned package';
