@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-24
+
+### Added
+- `module:link --hide-git` / `module:unlink --hide-git`: toggle git's
+  `skip-worktree` bit on `composer.json` / `composer.lock` so the linking churn
+  stays out of `git status` and `git diff` while modules are linked locally.
+- `module:sync` — `composer update` module package(s) addressed by module name,
+  with a report of the pinned vs. installed version (`--check` to report only,
+  `--dry-run` to pass through to Composer). Convenient for keeping several
+  projects that share the same module packages up to date.
+
 ## [1.3.0] - 2026-06-24
 
 ### Added
@@ -71,7 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (Pest + Testbench), PHPStan (Larastan) config, Pint config, and a
   GitHub Actions CI workflow.
 
-[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.3.0...HEAD
-[1.3.0]: https://github.com/dem1-off/laravel-modular/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/dem1-off/laravel-modular/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/dem1-off/laravel-modular/releases/tag/v1.1.0
+[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/dem1-off/laravel-modular/compare/1.3.0...1.4.0
+[1.3.0]: https://github.com/dem1-off/laravel-modular/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/dem1-off/laravel-modular/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/dem1-off/laravel-modular/releases/tag/1.1.0

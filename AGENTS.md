@@ -69,8 +69,9 @@ Need more than attributes? Override `register()`/`boot()` and **call
 | `php artisan module:check` | Diagnostics. |
 | `php artisan module:cache` / `module:clear` | Compile discovery + attributes into one PHP file for prod (wired into `optimize`). |
 | `php artisan module:promote Blog [--export=DIR]` | Print the plan to move a module to its own repo (non-destructive). |
-| `php artisan module:link Blog\|Blog Billing\|--all [--dry-run]` | Switch module(s) to local path development (reverse of promotion). |
-| `php artisan module:unlink Blog\|--all [--constraint=^1.2] [--dry-run]` | Restore module(s) to a versioned package. |
+| `php artisan module:link Blog\|Blog Billing\|--all [--hide-git] [--dry-run]` | Switch module(s) to local path development (reverse of promotion). `--hide-git` skip-worktrees `composer.json`/`lock` so linking churn stays out of the diff. |
+| `php artisan module:unlink Blog\|--all [--constraint=^1.2] [--hide-git] [--dry-run]` | Restore module(s) to a versioned package; `--hide-git` reverses the skip-worktree. |
+| `php artisan module:sync Blog\|--all [--check] [--dry-run]` | `composer update` the module package(s) by module name; reports pinned vs installed version. `--check` reports only. |
 
 ## Runtime API
 
@@ -107,9 +108,12 @@ the result. The actual work lives in `src/Operations/` (the application layer),
 which is console-free and unit-testable without artisan:
 
 - `ComposerManifest`, `LinkState` — value objects over JSON files.
-- `LinkModules` / `UnlinkModules`, `PromoteModule` (→ `PromotionPlan`),
-  `ScaffoldModule` (+ `ModuleLayout`), `CompileModuleCache` / `ClearModuleCache`,
-  `DiagnoseModules` (→ `Diagnosis`), `SetModuleStatus`.
+- `LinkModules` / `UnlinkModules`, `SyncModules` (→ `SyncEntry`),
+  `HideFromGit` (skip-worktree toggling via an injected git runner),
+  `PromoteModule` (→ `PromotionPlan`), `ScaffoldModule` (+ `ModuleLayout`),
+  `GenerateModuleClass` (+ `ClassLayer`) / `GenerateModuleMigration`,
+  `CompileModuleCache` / `ClearModuleCache`, `DiagnoseModules` (→ `Diagnosis`),
+  `SetModuleStatus`.
 - `Manager/` (`ModuleManager`, `ModuleDescriptor`) is the domain/query layer.
 
 When adding a command with real logic, **put the logic in an Operation and keep

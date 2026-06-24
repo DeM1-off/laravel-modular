@@ -5,6 +5,15 @@ All notable changes are tracked in
 following [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## 1.4.0 — 2026-06-24
+
+### Added
+- `module:link --hide-git` / `module:unlink --hide-git` to keep the linking
+  churn (`composer.json` / `composer.lock`) out of git while developing locally.
+- `module:sync` — `composer update` module package(s) by module name, with a
+  pinned-vs-installed report (`--check`, `--dry-run`). Handy for keeping several
+  projects that share the same module packages in sync.
+
 ## 1.3.0 — 2026-06-24
 
 ### Added
