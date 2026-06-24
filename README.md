@@ -1,6 +1,7 @@
 # dem1-off/laravel-modular
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/dem1-off/laravel-modular.svg)](https://packagist.org/packages/dem1-off/laravel-modular)
+[![Tests](https://github.com/DeM1-off/laravel-modular/actions/workflows/tests.yml/badge.svg)](https://github.com/DeM1-off/laravel-modular/actions/workflows/tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/dem1-off/laravel-modular.svg)](https://packagist.org/packages/dem1-off/laravel-modular)
 [![PHP Version](https://img.shields.io/packagist/php-v/dem1-off/laravel-modular.svg)](https://packagist.org/packages/dem1-off/laravel-modular)
 [![License](https://img.shields.io/packagist/l/dem1-off/laravel-modular.svg)](LICENSE)

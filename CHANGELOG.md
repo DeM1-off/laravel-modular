@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-24
+
+### Added
+- Console-free `Operations` layer: each artisan command now delegates to a
+  plain-PHP use-case under `src/Operations/`, so the behaviour can be unit
+  tested without booting the console — `LinkModules`, `UnlinkModules`,
+  `ComposerManifest`, `LinkState`, `PromoteModule`, `PromotionPlan`,
+  `CompileModuleCache`, `ClearModuleCache`, `DiagnoseModules`, `ScaffoldModule`,
+  `ModuleLayout`, `GenerateModuleClass`, `GenerateModuleMigration`, `ClassLayer`.
+- Unit coverage for the `Operations` layer and a feature test for `module:link`.
+
+### Changed
+- The artisan commands are now thin adapters over the `Operations` layer; their
+  signatures and behaviour are unchanged.
+- The abstract `ModuleGeneratorCommand` base now declares a single
+  `layer(): ClassLayer` method in place of the previous `stub()`, `layerPath()`,
+  `layerNamespace()` and `classSuffix()` hooks. This only affects code that
+  subclasses `ModuleGeneratorCommand` directly to add a custom generator.
+
 ## [1.2.0] - 2026-06-22
 
 ### Added
@@ -52,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (Pest + Testbench), PHPStan (Larastan) config, Pint config, and a
   GitHub Actions CI workflow.
 
-[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/dem1-off/laravel-modular/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/dem1-off/laravel-modular/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/dem1-off/laravel-modular/releases/tag/v1.1.0

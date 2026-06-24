@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Dem1Off\LaravelModular\Console;
 
-use Dem1Off\LaravelModular\Manager\ModuleManager;
+use Dem1Off\LaravelModular\Operations\SetModuleStatus;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
@@ -14,19 +14,18 @@ final class ModuleEnableCommand extends Command
 
     protected $description = 'Enable a module';
 
-    public function handle(ModuleManager $manager): int
+    public function handle(SetModuleStatus $status): int
     {
         /** @var string $argument */
         $argument = $this->argument('module');
         $name = Str::studly($argument);
 
-        if (! $manager->has($name)) {
+        if (! $status->execute($name, true)) {
             $this->components->error("Module [{$name}] not found.");
 
             return self::FAILURE;
         }
 
-        $manager->setStatus($name, true);
         $this->components->info("Module [{$name}] enabled.");
 
         return self::SUCCESS;

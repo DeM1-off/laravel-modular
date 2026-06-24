@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace Dem1Off\LaravelModular\Console\Generators;
 
 use Dem1Off\LaravelModular\Manager\ModuleManager;
+use Dem1Off\LaravelModular\Operations\GenerateModuleMigration;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
+/**
+ * Thin adapter: resolve the module, delegate to the GenerateModuleMigration
+ * use-case. The migration writing itself lives in the Operations layer.
+ */
 final class MakeMigrationCommand extends Command
 {
     protected $signature = 'module:make-migration {module} {name} {--table=}';
@@ -34,19 +39,16 @@ final class MakeMigrationCommand extends Command
 
         /** @var string $nameArg */
         $nameArg = $this->argument('name');
-        $name = Str::snake($nameArg);
-
         /** @var string|null $tableOption */
         $tableOption = $this->option('table');
-        $table = $tableOption ?: $name;
-        $dir = $manager->path($module).'/database/migrations';
-        $file = $dir.'/'.date('Y_m_d_His').'_'.$name.'.php';
 
-        $this->files->ensureDirectoryExists($dir);
+        $generate = new GenerateModuleMigration(
+            $this->files,
+            packageStubs: __DIR__.'/../../../stubs',
+            publishedStubs: base_path('stubs/modular'),
+        );
 
-        $published = base_path('stubs/modular/migration.stub');
-        $stubPath = is_file($published) ? $published : __DIR__.'/../../../stubs/migration.stub';
-        $this->files->put($file, strtr($this->files->get($stubPath), ['{{ table }}' => $table]));
+        $file = $generate->execute($manager->path($module), $nameArg, $tableOption);
 
         $this->components->info('Migration ['.basename($file).'] created in module '.$module.'.');
 

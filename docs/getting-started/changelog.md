@@ -5,6 +5,20 @@ All notable changes are tracked in
 following [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## 1.3.0 — 2026-06-24
+
+### Added
+- Console-free `Operations` layer: each command delegates to a plain-PHP
+  use-case under `src/Operations/`, testable without the console.
+- Unit coverage for the `Operations` layer and a `module:link` feature test.
+
+### Changed
+- Commands are now thin adapters over the `Operations` layer; their signatures
+  and behaviour are unchanged.
+- `ModuleGeneratorCommand` now declares a single `layer(): ClassLayer` hook
+  (was `stub()`/`layerPath()`/`layerNamespace()`/`classSuffix()`) — only affects
+  custom generators that subclass it directly.
+
 ## 1.2.0 — 2026-06-22
 
 ### Added
