@@ -18,6 +18,7 @@ use Dem1Off\LaravelModular\Console\ModuleLinkCommand;
 use Dem1Off\LaravelModular\Console\ModuleListCommand;
 use Dem1Off\LaravelModular\Console\ModuleMakeCommand;
 use Dem1Off\LaravelModular\Console\ModulePromoteCommand;
+use Dem1Off\LaravelModular\Console\ModuleSyncCommand;
 use Dem1Off\LaravelModular\Console\ModuleUnlinkCommand;
 use Dem1Off\LaravelModular\Manager\ModuleCache;
 use Dem1Off\LaravelModular\Manager\ModuleManager;
@@ -79,6 +80,7 @@ final class LaravelModularServiceProvider extends ServiceProvider
                 ModulePromoteCommand::class,
                 ModuleLinkCommand::class,
                 ModuleUnlinkCommand::class,
+                ModuleSyncCommand::class,
                 ModuleCacheCommand::class,
                 ModuleClearCommand::class,
                 ModuleCheckCommand::class,

@@ -18,6 +18,7 @@ final class ModuleLinkCommand extends ModuleLinkingCommand
     protected $signature = 'module:link
         {modules?* : Modules to link for local dev (omit and pass --all for every module)}
         {--all : Link every module}
+        {--hide-git : Hide composer.json/lock from git (skip-worktree) while linked}
         {--dry-run : Show the composer.json changes without writing them}';
 
     protected $description = 'Switch module(s) to local path development (reverse of promotion)';
@@ -56,6 +57,13 @@ final class ModuleLinkCommand extends ModuleLinkingCommand
         $operation->commit();
 
         $this->components->info('Linked for local development: '.implode(', ', $result->packages));
+
+        if ((bool) $this->option('hide-git')) {
+            $this->toggleGitVisibility(true)
+                ? $this->components->info('Hidden from git (skip-worktree): composer.json, composer.lock')
+                : $this->components->warn('Could not hide composer.json from git (not a repo, or git unavailable).');
+        }
+
         $this->newLine();
         $this->line('  Next: <fg=yellow>composer update '.implode(' ', $result->packages).'</>');
 
