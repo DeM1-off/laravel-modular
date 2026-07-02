@@ -77,6 +77,54 @@ it('resolves a module path and throws for unknown modules', function () {
     $manager->path('Ghost');
 })->throws(RuntimeException::class);
 
+it('reads requires and reports dependents', function () {
+    $this->files->ensureDirectoryExists($this->base.'/Store');
+    $this->files->put($this->base.'/Store/module.json', json_encode([
+        'name' => 'Store',
+        'requires' => ['Shop'],
+        'providers' => [],
+    ]));
+
+    $manager = makeManager($this->base, $this->files);
+
+    expect($manager->find('Store')->requires)->toBe(['Shop'])
+        ->and($manager->dependents('Shop'))->toBe(['Store'])
+        ->and($manager->dependents('Blog'))->toBe([]);
+});
+
+it('loads required modules before their dependents, over priority', function () {
+    $this->files->ensureDirectoryExists($this->base.'/Aaa');
+    $this->files->put($this->base.'/Aaa/module.json', json_encode([
+        'name' => 'Aaa',
+        'priority' => 10,
+        'requires' => ['Shop'],
+        'providers' => [],
+    ]));
+
+    $manager = makeManager($this->base, $this->files);
+
+    $order = array_keys($manager->all());
+
+    expect(array_search('Shop', $order, true))->toBeLessThan(array_search('Aaa', $order, true));
+});
+
+it('survives a dependency cycle and unknown requirements', function () {
+    $this->files->put($this->base.'/Blog/module.json', json_encode([
+        'name' => 'Blog',
+        'requires' => ['Shop', 'Ghost'],
+        'providers' => [],
+    ]));
+    $this->files->put($this->base.'/Shop/module.json', json_encode([
+        'name' => 'Shop',
+        'requires' => ['Blog'],
+        'providers' => [],
+    ]));
+
+    $manager = makeManager($this->base, $this->files);
+
+    expect($manager->all())->toHaveCount(2);
+});
+
 it('orders modules by priority then name', function () {
     $this->files->ensureDirectoryExists($this->base.'/Zeta');
     $this->files->put($this->base.'/Zeta/module.json', json_encode([

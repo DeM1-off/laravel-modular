@@ -4,6 +4,7 @@
     "description": "",
     "keywords": [],
     "priority": 0,
+    "requires": [],
     "providers": [
         "{{ provider_fqcn }}"
     ],

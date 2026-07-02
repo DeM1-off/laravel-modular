@@ -19,7 +19,7 @@ use ReflectionClass;
  *
  * @phpstan-type Bindings list<array{abstract: class-string, concrete: class-string, lifetime: 'bind'|'singleton'|'scoped'}>
  * @phpstan-type Tags list<array{tag: string, concrete: class-string}>
- * @phpstan-type Settings array{name: string|null, config: bool, migrations: bool, views: bool, routes: bool, commands: list<class-string>, binds: Bindings, listens: list<array{event: class-string, listener: class-string}>, middleware: list<array{name: string, class: class-string}>, tags: Tags}
+ * @phpstan-type Settings array{name: string|null, config: bool, migrations: bool, views: bool, routes: bool, lang: bool, commands: list<class-string>, binds: Bindings, listens: list<array{event: class-string, listener: class-string}>, middleware: list<array{name: string, class: class-string}>, tags: Tags}
  */
 final class AttributeParser
 {
@@ -62,6 +62,7 @@ final class AttributeParser
             'migrations' => $module === null ? true : $module->migrations,
             'views' => $module === null ? true : $module->views,
             'routes' => $module === null ? true : $module->routes,
+            'lang' => $module === null ? true : $module->lang,
             'commands' => $module === null ? [] : $module->commands,
             'binds' => $binds,
             'listens' => $listens,

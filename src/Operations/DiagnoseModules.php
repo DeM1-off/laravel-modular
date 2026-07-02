@@ -30,11 +30,25 @@ final readonly class DiagnoseModules
                 static fn (string $provider): bool => ! class_exists($provider),
             ));
 
+            // Requirement problems only matter while the module actually boots.
+            $requiresMissing = [];
+            $requiresDisabled = [];
+
+            foreach ($module->enabled ? $module->requires : [] as $requirement) {
+                if (! $this->manager->has($requirement)) {
+                    $requiresMissing[] = $requirement;
+                } elseif (! $this->manager->isEnabled($requirement)) {
+                    $requiresDisabled[] = $requirement;
+                }
+            }
+
             $modules[] = [
                 'name' => $module->name,
                 'enabled' => $module->enabled,
                 'priority' => $module->priority,
                 'missing' => $missing,
+                'requires_missing' => $requiresMissing,
+                'requires_disabled' => $requiresDisabled,
             ];
         }
 

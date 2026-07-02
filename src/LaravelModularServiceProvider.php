@@ -6,9 +6,17 @@ namespace Dem1Off\LaravelModular;
 
 use Composer\Autoload\ClassLoader;
 use Dem1Off\LaravelModular\Console\Generators\MakeActionCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeCommandCommand;
 use Dem1Off\LaravelModular\Console\Generators\MakeControllerCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeEventCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeFactoryCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeJobCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeListenerCommand;
 use Dem1Off\LaravelModular\Console\Generators\MakeMigrationCommand;
 use Dem1Off\LaravelModular\Console\Generators\MakeModelCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeRequestCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeSeederCommand;
+use Dem1Off\LaravelModular\Console\Generators\MakeTestCommand;
 use Dem1Off\LaravelModular\Console\ModuleCacheCommand;
 use Dem1Off\LaravelModular\Console\ModuleCheckCommand;
 use Dem1Off\LaravelModular\Console\ModuleClearCommand;
@@ -88,6 +96,14 @@ final class LaravelModularServiceProvider extends ServiceProvider
                 MakeModelCommand::class,
                 MakeActionCommand::class,
                 MakeMigrationCommand::class,
+                MakeRequestCommand::class,
+                MakeEventCommand::class,
+                MakeListenerCommand::class,
+                MakeJobCommand::class,
+                MakeCommandCommand::class,
+                MakeFactoryCommand::class,
+                MakeSeederCommand::class,
+                MakeTestCommand::class,
             ]);
         }
 

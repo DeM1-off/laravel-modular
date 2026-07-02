@@ -15,8 +15,13 @@ churn.
 
 - **Attribute-driven wiring** — declare bindings and listeners with `#[Bind]`
   and `#[Listen]`, or let an implementation auto-bind itself with `#[Provides]`
-  (Symfony-style autoconfigure for Laravel modules). Config, migrations, views
-  and routes load by convention, so the common provider is empty.
+  (Symfony-style autoconfigure for Laravel modules). Config, migrations, views,
+  routes, translations and artisan commands load by convention, so the common
+  provider is empty.
+- **Checkable boundaries** — declare inter-module dependencies with `requires`
+  in `module.json` (dependency-aware load order) and let
+  `module:check --boundaries` fail CI when a module reaches into another
+  module's internals instead of its contracts.
 - **Fast by design** — `module:cache` compiles discovery and attributes into one
   PHP file (zero reflection, zero filesystem scanning at runtime), wired into
   `php artisan optimize`.
@@ -59,6 +64,7 @@ Modules/Blog/
 ├── module.json            # module manifest
 ├── config/blog.php
 ├── database/{migrations,factories,seeders}/
+├── lang/
 ├── resources/views/
 ├── src/{Domain,Application,Infrastructure}/
 │   └── Infrastructure/Providers/BlogServiceProvider.php
@@ -67,9 +73,10 @@ Modules/Blog/
 
 ## Configuring a module
 
-**Convention loads, attributes wire.** Config, migrations, views and routes load
-automatically when their folders exist. Declare container bindings and listeners
-with attributes:
+**Convention loads, attributes wire.** Config, migrations, views, routes,
+translations and artisan commands (from `Console/` directories) load
+automatically when their folders exist. Declare container bindings and
+listeners with attributes:
 
 ```php
 use Dem1Off\LaravelModular\Module\Attributes\Bind;

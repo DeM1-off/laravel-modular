@@ -11,6 +11,7 @@ final readonly class ModuleDescriptor
 {
     /**
      * @param  list<class-string>  $providers
+     * @param  list<string>  $requires  names of modules this module depends on
      */
     public function __construct(
         public string $name,
@@ -20,6 +21,7 @@ final readonly class ModuleDescriptor
         public ?string $alias = null,
         public ?string $description = null,
         public int $priority = 0,
+        public array $requires = [],
     ) {}
 
     public function path(string $sub = ''): string
