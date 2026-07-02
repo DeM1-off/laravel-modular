@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dem1Off\LaravelModular\Operations;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 
 /**
  * Use-case: write a single class (action, controller, model, …) into a module's
@@ -23,7 +24,9 @@ final readonly class GenerateModuleClass
 
     public function targetFile(string $moduleRoot, string $appFolder, ClassLayer $layer, string $class): string
     {
-        return $moduleRoot.'/'.trim($appFolder, '/').'/'.$layer->path.'/'.$class.'.php';
+        $root = $layer->inAppFolder ? $moduleRoot.'/'.trim($appFolder, '/') : $moduleRoot;
+
+        return $root.'/'.$layer->path.'/'.$class.'.php';
     }
 
     public function exists(string $moduleRoot, string $appFolder, ClassLayer $layer, string $class): bool
@@ -40,11 +43,15 @@ final readonly class GenerateModuleClass
         $this->files->ensureDirectoryExists(dirname($file));
 
         $namespace = $baseNamespace.'\\'.$module.'\\'.$layer->namespace;
+        $base = $layer->baseName($class);
 
         $this->files->put($file, strtr($this->files->get($this->stubPath($layer->stub)), [
             '{{ namespace }}' => $namespace,
             '{{ class }}' => $class,
             '{{ module }}' => $module,
+            '{{ module_kebab }}' => Str::kebab($module),
+            '{{ name_kebab }}' => Str::kebab($base),
+            '{{ model }}' => $baseNamespace.'\\'.$module.'\\'.ClassLayer::model()->namespace.'\\'.$base,
         ]));
 
         return $file;

@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-02
+
+### Added
+- Convention loading of translations: a module's `lang/` directory (or legacy
+  `resources/lang/`) loads automatically — PHP files under the module's
+  lowercase namespace (`trans('blog::messages.welcome')`) plus JSON files;
+  publishable with `--tag=modules-lang`. Toggle per module with
+  `#[Module(lang: false)]`.
+- Convention discovery of artisan commands: `Illuminate\Console\Command`
+  subclasses inside a module's `Console` directories (any depth under the app
+  folder) register automatically — scanned on console boots in development,
+  compiled by `module:cache` for production. Toggle with
+  `modules.scan_commands`; `#[Module(commands: [...])]` remains for commands
+  living elsewhere.
+- Eight new in-module generators: `module:make-request`, `module:make-event`,
+  `module:make-listener`, `module:make-job`, `module:make-command`,
+  `module:make-factory`, `module:make-seeder` and `module:make-test`.
+- Inter-module dependencies via a `requires` list in `module.json`: required
+  modules now load before their dependents (winning over `priority`),
+  `module:enable` warns when a requirement is missing or disabled,
+  `module:disable` warns when still-enabled modules depend on the disabled one,
+  and `module:check` fails when an enabled module's requirement is missing or
+  disabled.
+- `module:check --boundaries` — cross-module boundary analysis. Reports when a
+  module references another module outside its public surface
+  (`Contracts`/`Data`/`Events`/`Enums` by default, configurable via
+  `modules.boundaries.allowed`) and, for modules that declare `requires`, any
+  undeclared dependency.
+
+### Changed
+- `make:module` now scaffolds a `lang/` directory and a `requires` field in
+  `module.json`.
+- Re-run `php artisan module:cache` after upgrading: the compiled settings now
+  carry the translation toggle and discovered commands.
+
 ## [1.4.0] - 2026-06-24
 
 ### Added
@@ -82,7 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (Pest + Testbench), PHPStan (Larastan) config, Pint config, and a
   GitHub Actions CI workflow.
 
-[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/1.4.0...HEAD
+[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/1.5.0...HEAD
+[1.5.0]: https://github.com/dem1-off/laravel-modular/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/dem1-off/laravel-modular/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/dem1-off/laravel-modular/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/dem1-off/laravel-modular/compare/1.1.0...1.2.0

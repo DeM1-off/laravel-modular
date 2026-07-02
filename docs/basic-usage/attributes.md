@@ -2,8 +2,8 @@
 
 Two principles: **convention loads, attributes wire.**
 
-- **Convention** — config, migrations, views and routes load automatically when
-  their folders exist. Nothing to declare.
+- **Convention** — config, migrations, views, routes, translations and console
+  commands load automatically when their folders exist. Nothing to declare.
 - **Attributes** — declare container bindings and event listeners right on the
   provider. This is the package's signature: a module's wiring reads top-to-bottom
   as a list of attributes.
@@ -31,6 +31,8 @@ No method body — config/migrations/views/routes are picked up by convention.
 | Migrations | `database/migrations/` |
 | Views | `resources/views/` (namespace = lowercase module name) |
 | Routes | `routes/web.php` (web), `routes/api.php` (api, `api` prefix) |
+| Translations | `lang/` (or legacy `resources/lang/`) — PHP files namespaced as `<module>::`, JSON files for `__()` |
+| Commands | `Illuminate\Console\Command` subclasses in any `Console/` directory under the app folder (console boots only) |
 
 ## `#[Bind]`
 
@@ -145,8 +147,8 @@ final class BlogServiceProvider extends ModuleServiceProvider {}
 | Argument | Default | Effect |
 | --- | --- | --- |
 | `name` | class basename | Override the module name. |
-| `config` / `migrations` / `views` / `routes` | `true` | Turn a convention loader off. |
-| `commands` | `[]` | Artisan commands to register. |
+| `config` / `migrations` / `views` / `routes` / `lang` | `true` | Turn a convention loader off. |
+| `commands` | `[]` | Artisan commands to register that live outside a `Console` directory (those are discovered automatically). |
 
 ## Need more than attributes?
 

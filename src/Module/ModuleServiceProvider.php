@@ -13,9 +13,9 @@ use Illuminate\Support\Str;
 /**
  * Base provider every module extends.
  *
- * Loading is convention-first: config, migrations, views and routes load
- * automatically when their folders exist. Wiring is attribute-driven —
- * #[Bind], #[Listen] and an optional #[Module] override.
+ * Loading is convention-first: config, migrations, views, routes, translations
+ * and console commands load automatically when their folders exist. Wiring is
+ * attribute-driven — #[Bind], #[Listen] and an optional #[Module] override.
  *
  * Fast by design: attribute settings come from the compiled cache when present
  * (`module:cache`), so a production request does zero reflection. Without a
@@ -86,6 +86,10 @@ abstract class ModuleServiceProvider extends ServiceProvider
             $this->loadRoutes();
         }
 
+        if ($settings['lang']) {
+            $this->loadTranslations();
+        }
+
         foreach ($settings['listens'] as $listen) {
             Event::listen($listen['event'], $listen['listener']);
         }
@@ -94,8 +98,12 @@ abstract class ModuleServiceProvider extends ServiceProvider
             Route::aliasMiddleware($middleware['name'], $middleware['class']);
         }
 
-        if ($settings['commands'] !== [] && $this->app->runningInConsole()) {
-            $this->commands($settings['commands']);
+        if ($this->app->runningInConsole()) {
+            $commands = $this->consoleCommands($settings['commands']);
+
+            if ($commands !== []) {
+                $this->commands($commands);
+            }
         }
     }
 
@@ -149,6 +157,55 @@ abstract class ModuleServiceProvider extends ServiceProvider
         if (is_file($api)) {
             Route::middleware('api')->prefix('api')->group($api);
         }
+    }
+
+    private function loadTranslations(): void
+    {
+        $path = module_path($this->name(), 'lang');
+
+        if (! is_dir($path)) {
+            $path = module_path($this->name(), 'resources/lang');
+        }
+
+        if (is_dir($path)) {
+            $this->loadTranslationsFrom($path, $this->lower());
+            $this->loadJsonTranslationsFrom($path);
+            $this->publishes([$path => lang_path('modules/'.$this->lower())], 'modules-lang');
+        }
+    }
+
+    /**
+     * Commands to register: the explicit #[Module(commands:)] list plus classes
+     * found by convention in the module's `Console` directories. Discovery only
+     * runs uncompiled — the compiled cache already folds them into the settings.
+     *
+     * @param  list<class-string>  $commands
+     * @return list<class-string>
+     */
+    private function consoleCommands(array $commands): array
+    {
+        if ($this->compiledSettings() === null && (bool) config('modules.scan_commands', true)) {
+            $commands = array_merge($commands, $this->scanCommands());
+        }
+
+        return array_values(array_unique($commands));
+    }
+
+    /**
+     * @return list<class-string>
+     */
+    private function scanCommands(): array
+    {
+        /** @var string $namespace */
+        $namespace = config('modules.namespace');
+        /** @var string $appFolder */
+        $appFolder = config('modules.paths.app_folder', 'src/');
+
+        return $this->app->make(CommandScanner::class)->scan(
+            module_path($this->name()),
+            $namespace.'\\'.$this->name(),
+            $appFolder,
+        );
     }
 
     /**

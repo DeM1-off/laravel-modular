@@ -5,6 +5,28 @@ All notable changes are tracked in
 following [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## 1.5.0 — 2026-07-02
+
+### Added
+- Convention loading of translations (`lang/`, PHP + JSON, publishable with
+  `--tag=modules-lang`); toggle with `#[Module(lang: false)]`.
+- Convention discovery of artisan commands from a module's `Console`
+  directories (dev scan + compiled by `module:cache`); toggle with
+  `modules.scan_commands`.
+- New generators: `module:make-request`, `module:make-event`,
+  `module:make-listener`, `module:make-job`, `module:make-command`,
+  `module:make-factory`, `module:make-seeder`, `module:make-test`.
+- Inter-module dependencies via `module.json` `requires`: dependency-aware load
+  order, enable/disable warnings, and `module:check` failures for broken
+  requirements.
+- `module:check --boundaries` — flags references into another module's
+  internals (everything outside `Contracts`/`Data`/`Events`/`Enums` by default)
+  and undeclared dependencies.
+
+### Changed
+- `make:module` scaffolds `lang/` and a `requires` field; re-run
+  `php artisan module:cache` after upgrading.
+
 ## 1.4.0 — 2026-06-24
 
 ### Added

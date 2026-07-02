@@ -30,6 +30,20 @@ modules, config and the artisan command signatures are unaffected. Breaking
 changes to the public runtime API only land in the next major (v2) and are
 listed in the [Changelog](/getting-started/changelog).
 
+### 1.5.0 — re-run `module:cache`
+
+The compiled settings now carry the translation toggle and the commands
+discovered from `Console` directories. After upgrading a deployment that uses
+the compiled cache, rebuild it once:
+
+```bash
+php artisan module:cache   # or: php artisan optimize
+```
+
+Everything else is additive — translations, command discovery, the new
+generators, `requires` and `module:check --boundaries` change nothing for
+modules that don't use them.
+
 ### 1.3.0 — custom generators
 
 1.3.0 moved each command's logic into a console-free

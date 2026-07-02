@@ -61,7 +61,26 @@ final class ModuleManager
         // Higher priority first, then alphabetical — controls provider load order.
         uasort($modules, static fn (ModuleDescriptor $a, ModuleDescriptor $b): int => [$b->priority, $a->name] <=> [$a->priority, $b->name]);
 
-        return $this->cache = $modules;
+        // A `requires` declaration wins over priority: dependencies load first.
+        return $this->cache = $this->resolveOrder($modules);
+    }
+
+    /**
+     * Modules that declare the given module in their `requires`.
+     *
+     * @return list<string>
+     */
+    public function dependents(string $name): array
+    {
+        $dependents = [];
+
+        foreach ($this->all() as $module) {
+            if (in_array($name, $module->requires, true)) {
+                $dependents[] = $module->name;
+            }
+        }
+
+        return $dependents;
     }
 
     /**
@@ -135,7 +154,7 @@ final class ModuleManager
     /**
      * Hydrate from the compiled cache so all()/enabled() skip the filesystem.
      *
-     * @param  array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias?: string|null, description?: string|null, priority?: int}>  $modules
+     * @param  array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias?: string|null, description?: string|null, priority?: int, requires?: list<string>}>  $modules
      */
     public function useCompiled(array $modules): void
     {
@@ -150,6 +169,7 @@ final class ModuleManager
                 alias: $module['alias'] ?? null,
                 description: $module['description'] ?? null,
                 priority: $module['priority'] ?? 0,
+                requires: $module['requires'] ?? [],
             );
         }
 
@@ -159,7 +179,7 @@ final class ModuleManager
     /**
      * Serialisable array form of every module, for the compiled cache.
      *
-     * @return array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias: string|null, description: string|null, priority: int}>
+     * @return array<string, array{name: string, path: string, enabled: bool, providers: list<class-string>, alias: string|null, description: string|null, priority: int, requires: list<string>}>
      */
     public function toArray(): array
     {
@@ -174,6 +194,7 @@ final class ModuleManager
                 'alias' => $module->alias,
                 'description' => $module->description,
                 'priority' => $module->priority,
+                'requires' => $module->requires,
             ];
         }
 
@@ -197,7 +218,50 @@ final class ModuleManager
             alias: $manifest['alias'] ?? null,
             description: $manifest['description'] ?? ($composer['description'] ?? null),
             priority: (int) ($manifest['priority'] ?? 0),
+            requires: array_values((array) ($manifest['requires'] ?? [])),
         );
+    }
+
+    /**
+     * Stable topological sort: each module's requirements come before it,
+     * otherwise the incoming (priority, name) order is preserved. A cycle or an
+     * unknown requirement is ignored here — module:check reports those.
+     *
+     * @param  array<string, ModuleDescriptor>  $modules
+     * @return array<string, ModuleDescriptor>
+     */
+    private function resolveOrder(array $modules): array
+    {
+        $ordered = [];
+        $visiting = [];
+
+        foreach (array_keys($modules) as $name) {
+            $this->visit($name, $modules, $ordered, $visiting);
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * @param  array<string, ModuleDescriptor>  $modules
+     * @param  array<string, ModuleDescriptor>  $ordered
+     * @param  array<string, true>  $visiting
+     */
+    private function visit(string $name, array $modules, array &$ordered, array &$visiting): void
+    {
+        if (isset($ordered[$name]) || isset($visiting[$name]) || ! isset($modules[$name])) {
+            return;
+        }
+
+        $visiting[$name] = true;
+
+        foreach ($modules[$name]->requires as $requirement) {
+            $this->visit($requirement, $modules, $ordered, $visiting);
+        }
+
+        unset($visiting[$name]);
+
+        $ordered[$name] = $modules[$name];
     }
 
     /**

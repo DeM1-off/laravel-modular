@@ -10,7 +10,7 @@
 | `module:disable {module}` | Disable a module. |
 | `module:cache` | Compile discovery + attributes into a fast cache (see [Performance](/advanced/performance)). |
 | `module:clear` | Remove the compiled cache (and the dev scan cache). |
-| `module:check` | Diagnose the setup: autoload mode, cache status, missing providers, binding conflicts. |
+| `module:check [--boundaries]` | Diagnose the setup: autoload mode, cache status, missing providers, broken `requires`, binding conflicts. `--boundaries` also flags cross-module references into another module's internals and undeclared dependencies. |
 | `module:promote {module} [--export=PATH]` | Print the promotion plan; `--export` copies the module out (non-destructive). |
 
 ## Local-path linking
@@ -71,10 +71,19 @@ Generate classes inside an existing module (DDD layout):
 | `module:make-controller {module} {name} [--force]` | `src/Infrastructure/Http/Controllers/{Name}Controller.php` |
 | `module:make-model {module} {name} [--force]` | `src/Infrastructure/Persistence/Models/{Name}.php` |
 | `module:make-action {module} {name} [--force]` | `src/Application/UseCases/{Name}.php` |
+| `module:make-request {module} {name} [--force]` | `src/Infrastructure/Http/Requests/{Name}Request.php` |
+| `module:make-event {module} {name} [--force]` | `src/Domain/Events/{Name}.php` |
+| `module:make-listener {module} {name} [--force]` | `src/Application/Listeners/{Name}.php` |
+| `module:make-job {module} {name} [--force]` | `src/Application/Jobs/{Name}.php` |
+| `module:make-command {module} {name} [--force]` | `src/Infrastructure/Console/{Name}Command.php` (auto-discovered — no registration needed) |
+| `module:make-factory {module} {name} [--force]` | `database/factories/{Name}Factory.php` |
+| `module:make-seeder {module} {name} [--force]` | `database/seeders/{Name}Seeder.php` |
+| `module:make-test {module} {name} [--force]` | `tests/Feature/{Name}Test.php` |
 | `module:make-migration {module} {name} [--table=]` | timestamped migration in `database/migrations` |
 
 ```bash
 php artisan module:make-controller Blog ShowPost
 php artisan module:make-action Blog PublishPost
+php artisan module:make-command Blog PublishPosts    # signature blog:publish-posts
 php artisan module:make-migration Blog create_posts_table --table=posts
 ```

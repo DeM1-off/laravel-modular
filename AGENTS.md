@@ -20,9 +20,10 @@ refactor. Never rename a module's namespace to "extract" it.
 ```
 Modules/Blog/
 ├── composer.json          # type: laravel-module, PSR-4 Modules\Blog\, extra.laravel.providers
-├── module.json            # manifest: name, alias, priority, providers (optional)
+├── module.json            # manifest: name, alias, priority, requires, providers (optional)
 ├── config/blog.php
 ├── database/{migrations,factories,seeders}/
+├── lang/
 ├── resources/views/
 ├── src/{Domain,Application,Infrastructure}/
 │   └── Infrastructure/Providers/BlogServiceProvider.php
@@ -34,8 +35,9 @@ Modules/Blog/
 ## How wiring works: convention loads, attributes wire
 
 - **Convention loads automatically** when the folder exists: `config/`,
-  `database/migrations/`, `resources/views/`, routes. The provider is usually
-  empty — do **not** add manual `loadMigrationsFrom`/`mergeConfigFrom` calls.
+  `database/migrations/`, `resources/views/`, `lang/`, routes, and artisan
+  commands inside `Console/` directories. The provider is usually empty — do
+  **not** add manual `loadMigrationsFrom`/`mergeConfigFrom`/`commands()` calls.
 - **Declare container wiring with PHP attributes on the provider**, not in
   `register()`:
 
@@ -63,10 +65,10 @@ Need more than attributes? Override `register()`/`boot()` and **call
 | Command | Purpose |
 | --- | --- |
 | `php artisan make:module Blog [--layout=ddd\|simple\|contracts]` | Scaffold a promotion-ready module. |
-| `php artisan module:make:{controller,model,action,migration} Blog Name` | Generators scoped to a module. |
+| `php artisan module:make-{controller,model,action,migration,request,event,listener,job,command,factory,seeder,test} Blog Name` | Generators scoped to a module (DDD layout paths). |
 | `php artisan module:list` | List modules and their enabled state. |
 | `php artisan module:enable Blog` / `module:disable Blog` | Toggle boot via `modules_statuses.json` (does **not** change source location). |
-| `php artisan module:check` | Diagnostics. |
+| `php artisan module:check [--boundaries]` | Diagnostics: providers, `requires`, conflicts; `--boundaries` flags cross-module references outside `Contracts`/`Data`/`Events`/`Enums` and undeclared dependencies. |
 | `php artisan module:cache` / `module:clear` | Compile discovery + attributes into one PHP file for prod (wired into `optimize`). |
 | `php artisan module:promote Blog [--export=DIR]` | Print the plan to move a module to its own repo (non-destructive). |
 | `php artisan module:link Blog\|Blog Billing\|--all [--hide-git] [--dry-run]` | Switch module(s) to local path development (reverse of promotion). `--hide-git` skip-worktrees `composer.json`/`lock` so linking churn stays out of the diff. |
@@ -113,8 +115,13 @@ which is console-free and unit-testable without artisan:
   `PromoteModule` (→ `PromotionPlan`), `ScaffoldModule` (+ `ModuleLayout`),
   `GenerateModuleClass` (+ `ClassLayer`) / `GenerateModuleMigration`,
   `CompileModuleCache` / `ClearModuleCache`, `DiagnoseModules` (→ `Diagnosis`),
-  `SetModuleStatus`.
+  `CheckBoundaries`, `SetModuleStatus`.
 - `Manager/` (`ModuleManager`, `ModuleDescriptor`) is the domain/query layer.
+  `ModuleManager::all()` orders by priority, then topologically by `requires`.
+- `Module/` holds the runtime: `ModuleServiceProvider` (convention loading),
+  `AttributeParser`, `ProvidesScanner` (#[Provides] auto-binding) and
+  `CommandScanner` (Console-directory command discovery) — the scanners run
+  live in dev and feed `CompileModuleCache` for production.
 
 When adding a command with real logic, **put the logic in an Operation and keep
 the command thin** — match this pattern. Trivial queries that just delegate to

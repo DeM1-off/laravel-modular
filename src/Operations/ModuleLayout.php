@@ -26,7 +26,7 @@ final readonly class ModuleLayout
 
     public static function for(string $preset, string $namespace, string $module): self
     {
-        $common = ['config', 'database/migrations', 'database/factories', 'database/seeders', 'resources/views', 'tests'];
+        $common = ['config', 'database/migrations', 'database/factories', 'database/seeders', 'lang', 'resources/views', 'tests'];
 
         return match ($preset) {
             'simple' => new self(

@@ -135,4 +135,34 @@ return [
     |
     */
     'scan_bindings' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scan for artisan commands
+    |--------------------------------------------------------------------------
+    |
+    | When true, Illuminate\Console\Command subclasses inside a module's
+    | `Console` directories (any depth under the app folder) are registered
+    | automatically. Scanning runs only on console boots and when the compiled
+    | cache is absent (development); `module:cache` bakes the result in for
+    | production. Commands outside a Console directory are declared explicitly
+    | with #[Module(commands: [...])].
+    |
+    */
+    'scan_commands' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module boundaries
+    |--------------------------------------------------------------------------
+    |
+    | Sub-namespaces of a module that other modules may reference — its public
+    | surface. `module:check --boundaries` flags any cross-module reference
+    | outside this list (reaching into another module's internals) and, when a
+    | module declares `requires` in module.json, any undeclared dependency.
+    |
+    */
+    'boundaries' => [
+        'allowed' => ['Contracts', 'Data', 'Events', 'Enums'],
+    ],
 ];

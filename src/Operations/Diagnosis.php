@@ -8,7 +8,7 @@ namespace Dem1Off\LaravelModular\Operations;
  * The result of diagnosing the module setup — plain data for the console to
  * render. Knows whether the setup is healthy; does no rendering itself.
  *
- * @phpstan-type ModuleRow array{name: string, enabled: bool, priority: int, missing: list<class-string>}
+ * @phpstan-type ModuleRow array{name: string, enabled: bool, priority: int, missing: list<class-string>, requires_missing: list<string>, requires_disabled: list<string>}
  * @phpstan-type Conflict array{abstract: string, modules: list<string>}
  */
 final readonly class Diagnosis
@@ -25,7 +25,7 @@ final readonly class Diagnosis
     public function isHealthy(): bool
     {
         foreach ($this->modules as $module) {
-            if ($module['missing'] !== []) {
+            if ($module['missing'] !== [] || $module['requires_missing'] !== [] || $module['requires_disabled'] !== []) {
                 return false;
             }
         }

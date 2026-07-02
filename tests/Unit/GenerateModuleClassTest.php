@@ -50,6 +50,37 @@ it('reports whether the target file already exists', function () {
     expect($this->generate->exists($this->root.'/Modules/Blog', 'src/', $layer, 'Post'))->toBeTrue();
 });
 
+it('writes module-rooted layers outside the app folder', function () {
+    $file = $this->generate->execute(
+        moduleRoot: $this->root.'/Modules/Blog',
+        appFolder: 'src/',
+        baseNamespace: 'Modules',
+        module: 'Blog',
+        layer: ClassLayer::factory(),
+        class: 'PostFactory',
+    );
+
+    expect($file)->toBe($this->root.'/Modules/Blog/database/factories/PostFactory.php');
+
+    $contents = file_get_contents($file);
+
+    expect($contents)->toContain('namespace Modules\\Blog\\Database\\Factories;')
+        ->and($contents)->toContain('\\Modules\\Blog\\Infrastructure\\Persistence\\Models\\Post::class');
+});
+
+it('derives the command signature from the module and class name', function () {
+    $file = $this->generate->execute(
+        moduleRoot: $this->root.'/Modules/Blog',
+        appFolder: 'src/',
+        baseNamespace: 'Modules',
+        module: 'Blog',
+        layer: ClassLayer::command(),
+        class: 'PublishPostsCommand',
+    );
+
+    expect(file_get_contents($file))->toContain("protected \$signature = 'blog:publish-posts';");
+});
+
 it('prefers a published stub over the package stub', function () {
     $published = $this->root.'/published';
     (new Filesystem)->ensureDirectoryExists($published);
