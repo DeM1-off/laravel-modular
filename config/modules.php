@@ -25,6 +25,10 @@ return [
     |               Infrastructure/Providers. Enforces layer boundaries.
     |  - 'simple' : app/{Http,Models,Providers}; a flat Laravel-style layout,
     |               lighter for straightforward CRUD modules.
+    |  - 'clean'  : src/Providers only. Every convention folder is opt-in, so
+    |               the module carries no directory it does not use — and,
+    |               because module:cache bakes folder resolution, one that
+    |               stays clean costs nothing at boot.
     |
     | Affects make:module scaffolding only; existing modules are untouched.
     |

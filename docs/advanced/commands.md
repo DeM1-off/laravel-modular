@@ -4,7 +4,7 @@
 
 | Command | Description |
 | --- | --- |
-| `make:module {name} [--layout=ddd\|simple\|contracts] [--force]` | Scaffold a new module. |
+| `make:module {name} [--layout=ddd\|simple\|contracts\|clean] [--force]` | Scaffold a new module. |
 | `module:list` | List all modules with their status. |
 | `module:enable {module}` | Enable a module (writes `modules_statuses.json`). |
 | `module:disable {module}` | Disable a module. |

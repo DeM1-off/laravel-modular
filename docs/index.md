@@ -20,7 +20,7 @@ features:
   - title: Attribute-driven
     details: Declare bindings and listeners with #[Bind] and #[Listen] — or let an implementation auto-bind itself with #[Provides] (Symfony-style autoconfigure for Laravel modules). Config, migrations, views and routes load by convention.
   - title: Fast by design
-    details: module:cache compiles discovery and attributes into one PHP file, so a production request does zero reflection and zero filesystem scanning. Wired into php artisan optimize.
+    details: module:cache compiles discovery, attributes and each module's resolved folders into one PHP file, so a production request does zero reflection and never touches the filesystem. Wired into php artisan optimize.
   - title: Promotion built in
     details: Module namespaces never change, so moving a module into its own repo is a Composer change, not a refactor.
   - title: Familiar layout

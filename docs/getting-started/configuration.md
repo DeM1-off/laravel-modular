@@ -5,7 +5,7 @@ After publishing, the package reads `config/modules.php`.
 | Key | What it controls |
 | --- | --- |
 | `namespace` | Root PSR-4 namespace for modules (default `Modules`). A module keeps this namespace whether it lives in the app or as a standalone package — that is what makes promotion zero-churn. |
-| `layout` | Default scaffold shape for `make:module`: `ddd` (`src/{Domain,Application,Infrastructure}`) or `simple` (`app/{Http,Models,Providers}`). |
+| `layout` | Default scaffold shape for `make:module`: `ddd` (`src/{Domain,Application,Infrastructure}`), `simple` (`app/{Http,Models,Providers}`), `contracts` (shared kernel) or `clean` (`src/Providers` only, every convention folder opt-in). |
 | `paths.modules` | Directory holding in-app modules (the path-repository root). |
 | `paths.app_folder` | Folder inside a module mapped to its root namespace (default `src/`). |
 | `paths.generator.*` | Sub-paths used by `make:*` generators (DDD layout). |

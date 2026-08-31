@@ -22,8 +22,9 @@ churn.
   in `module.json` (dependency-aware load order) and let
   `module:check --boundaries` fail CI when a module reaches into another
   module's internals instead of its contracts.
-- **Fast by design** — `module:cache` compiles discovery and attributes into one
-  PHP file (zero reflection, zero filesystem scanning at runtime), wired into
+- **Fast by design** — `module:cache` compiles discovery, attributes and each
+  module's resolved folders into one PHP file (zero reflection, zero filesystem
+  scanning, zero stat calls per module at runtime), wired into
   `php artisan optimize`.
 - **A designed-in promotion path** — module namespaces never change, so moving a
   module into its own repo is a Composer change, not a refactor.
@@ -71,6 +72,23 @@ Modules/Blog/
 └── tests/
 ```
 
+Prefer to start with nothing? `--layout=clean` scaffolds a namespace and a
+provider, and nothing else — every convention folder is opt-in, and one you
+never add costs nothing at boot:
+
+```bash
+php artisan make:module Ping --layout=clean
+```
+
+```
+Modules/Ping/
+├── composer.json
+├── module.json
+└── src/Providers/PingServiceProvider.php
+```
+
+Presets: `ddd` (default), `simple`, `contracts`, `clean`.
+
 ## Configuring a module
 
 **Convention loads, attributes wire.** Config, migrations, views, routes,
@@ -96,8 +114,11 @@ it's a normal Laravel provider. See the
 ## Performance
 
 Attributes reflect in development. In production, `php artisan module:cache`
-compiles discovery **and** attributes into one PHP file — a request does zero
-reflection and zero filesystem scanning. It's wired into `php artisan optimize`.
+compiles discovery, attributes **and** each module's resolved convention folders
+into one PHP file — a request does zero reflection, zero filesystem scanning and
+no stat calls per module. It's wired into `php artisan optimize`, and the usual
+cached-artifact rule applies: add a `routes/` or `lang/` folder to a module and
+rebuild the cache for it to take effect.
 
 ## Runtime API
 

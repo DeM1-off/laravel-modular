@@ -30,6 +30,25 @@ modules, config and the artisan command signatures are unaffected. Breaking
 changes to the public runtime API only land in the next major (v2) and are
 listed in the [Changelog](/getting-started/changelog).
 
+### 1.6.0 — re-run `module:cache`
+
+The compiled settings now carry each module's resolved convention paths, so a
+cached boot never stats the filesystem. Rebuild once after upgrading a
+deployment that uses the compiled cache:
+
+```bash
+php artisan module:cache   # or: php artisan optimize
+```
+
+An older cache without the paths still boots — the provider falls back to
+resolving folders live — so nothing breaks before you rebuild; you just don't
+get the saving yet.
+
+Note the new contract that comes with it: with a cache present, **adding** a
+convention folder (`routes/`, `lang/`, `config/`, …) to a module needs a
+`module:cache` rebuild to take effect, the same as `config:cache`. Development,
+which runs without the cache, is unaffected.
+
 ### 1.5.0 — re-run `module:cache`
 
 The compiled settings now carry the translation toggle and the commands

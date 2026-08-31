@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Dem1Off\LaravelModular\Module\ProvidesScanner;
+use Dem1Off\LaravelModular\Module\ScanCache;
 use Dem1Off\LaravelModular\Tests\Fixtures\ProvidesSample\CacheContract;
 use Dem1Off\LaravelModular\Tests\Fixtures\ProvidesSample\CsvExporter;
 use Dem1Off\LaravelModular\Tests\Fixtures\ProvidesSample\Exporter;
@@ -61,7 +62,7 @@ it('collects #[Provides(tag:)] into tags', function () {
 
 it('caches scan results to a file', function () {
     $cacheFile = sys_get_temp_dir().'/lm-scan-'.uniqid().'.php';
-    $scanner = new ProvidesScanner(new Filesystem, $cacheFile);
+    $scanner = new ProvidesScanner(new Filesystem, new ScanCache(new Filesystem, $cacheFile));
 
     $first = $scanner->scan(
         __DIR__.'/../Fixtures/ProvidesSample',

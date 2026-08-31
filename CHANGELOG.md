@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-08-31
+
+### Added
+- `make:module --layout=clean` — a fourth preset that scaffolds a module with
+  nothing but a namespace and a provider (`src/Providers`, `composer.json`,
+  `module.json`). Every convention folder is opt-in: create `routes/`, `lang/`,
+  `config/` and the rest only when the module needs them.
+
+### Changed
+- `module:cache` now also compiles each module's **resolved convention paths**,
+  so a cached boot performs no `is_file`/`is_dir` checks per module. A module
+  that ships none of the optional folders costs nothing at boot. Because folder
+  resolution is baked, adding a convention folder to a module now needs a cache
+  rebuild to take effect — the same contract as `config:cache`; development,
+  which has no cache, is unaffected.
+- Publishable paths (`modules-views`, `modules-lang`, `modules-config`,
+  `modules-stubs`) and artisan command registration are declared on console
+  boots only, so an HTTP request no longer builds them.
+- Development scanning got cheaper: a module's file tree is walked once per
+  process and shared by the `#[Provides]` scanner and the command scanner
+  instead of once each; command discovery is now memoised against the module's
+  change signature like `#[Provides]` already was (both share
+  `bootstrap/cache/modular-scan.php`, cleared by `module:clear`); and files are
+  filtered on their source text before being reflected, so a cold scan no
+  longer autoloads a module's entire codebase.
+- Smaller boot costs: the compiled cache is read with a single filesystem
+  operation, the enabled-module list is memoised, and runtime PSR-4
+  registration reuses Composer's already-registered loader instead of
+  re-including `vendor/autoload.php` on every request.
+
 ## [1.5.0] - 2026-07-02
 
 ### Added
@@ -117,7 +147,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test suite (Pest + Testbench), PHPStan (Larastan) config, Pint config, and a
   GitHub Actions CI workflow.
 
-[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/1.5.0...HEAD
+[Unreleased]: https://github.com/dem1-off/laravel-modular/compare/1.6.0...HEAD
+[1.6.0]: https://github.com/dem1-off/laravel-modular/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/dem1-off/laravel-modular/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/dem1-off/laravel-modular/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/dem1-off/laravel-modular/compare/1.2.0...1.3.0
