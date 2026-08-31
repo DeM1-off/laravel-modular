@@ -7,20 +7,35 @@ namespace Dem1Off\LaravelModular\Module;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use ReflectionClass;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Finds a module's artisan commands by convention: any instantiable
  * Illuminate\Console\Command subclass inside a `Console` directory (at any
  * depth) under the module's app folder.
  *
- * Runs in development (per console boot, over the Console directories only)
- * and at compile time for `module:cache` — the same logic feeds both, so dev
- * and production agree. Commands outside a Console directory are declared
- * explicitly with #[Module(commands: [...])].
+ * Runs in development (per console boot) and at compile time for
+ * `module:cache` — the same logic feeds both, so dev and production agree.
+ * The module listing is shared with {@see ProvidesScanner}, so a console boot
+ * walks the tree once for both scanners, and the result is memoised against the
+ * module's change signature so an unchanged module is never re-reflected.
+ * Commands outside a Console directory are declared explicitly with
+ * #[Module(commands: [...])].
  */
-final readonly class CommandScanner
+final class CommandScanner
 {
-    public function __construct(private Filesystem $files) {}
+    private readonly ModuleFiles $listing;
+
+    private readonly ScanCache $cache;
+
+    public function __construct(
+        private readonly Filesystem $files,
+        ?ScanCache $cache = null,
+        ?ModuleFiles $listing = null,
+    ) {
+        $this->cache = $cache ?? new ScanCache($files);
+        $this->listing = $listing ?? new ModuleFiles($files);
+    }
 
     /**
      * @param  string  $rootNamespace  e.g. "Modules\Blog"
@@ -34,13 +49,37 @@ final readonly class CommandScanner
             return [];
         }
 
+        ['files' => $files, 'signature' => $signature] = $this->listing->php($base);
+
+        $key = 'commands:'.$base;
+
+        /** @var list<class-string<Command>>|null $cached */
+        $cached = $this->cache->get($key, $signature);
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $commands = $this->reflect($files, $rootNamespace, $base);
+
+        $this->cache->put($key, $signature, $commands);
+
+        return $commands;
+    }
+
+    /**
+     * @param  array<int, SplFileInfo>  $files
+     * @return list<class-string<Command>>
+     */
+    private function reflect(array $files, string $rootNamespace, string $base): array
+    {
         $commands = [];
 
-        foreach ($this->files->allFiles($base) as $file) {
+        foreach ($files as $file) {
             $relative = ltrim(substr($file->getPathname(), strlen($base)), '/\\');
             $segments = explode('/', str_replace('\\', '/', $relative));
 
-            if ($file->getExtension() !== 'php' || ! in_array('Console', array_slice($segments, 0, -1), true)) {
+            if (! in_array('Console', array_slice($segments, 0, -1), true)) {
                 continue;
             }
 

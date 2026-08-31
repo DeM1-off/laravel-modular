@@ -13,15 +13,17 @@ to get convention loading (config/migrations/views/routes) and attribute wiring
 
 ### Do I have to use the DDD layout?
 
-No. `make:module` has `ddd` (default), `simple` and `contracts` presets, and you
+No. `make:module` has `ddd` (default), `simple`, `contracts` and `clean` presets, and you
 can publish the stubs (`--tag=modules-stubs`) to shape your own structure. See
 [Creating a module](/basic-usage/creating-a-module).
 
 ### How can attribute-based config be fast?
 
 In development attributes are reflected once per provider and memoised. In
-production `php artisan module:cache` compiles discovery **and** attributes into
-one PHP file, so a request does zero reflection and zero filesystem scanning.
+production `php artisan module:cache` compiles discovery, attributes **and**
+each module's resolved convention folders into one PHP file, so a request does
+zero reflection and never touches the filesystem — a module that ships none of
+the optional folders costs nothing at boot.
 See [Performance](/advanced/performance).
 
 ### Can a module declare its own Composer dependencies?

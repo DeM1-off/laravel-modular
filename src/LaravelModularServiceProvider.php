@@ -30,7 +30,10 @@ use Dem1Off\LaravelModular\Console\ModuleSyncCommand;
 use Dem1Off\LaravelModular\Console\ModuleUnlinkCommand;
 use Dem1Off\LaravelModular\Manager\ModuleCache;
 use Dem1Off\LaravelModular\Manager\ModuleManager;
+use Dem1Off\LaravelModular\Module\CommandScanner;
+use Dem1Off\LaravelModular\Module\ModuleFiles;
 use Dem1Off\LaravelModular\Module\ProvidesScanner;
+use Dem1Off\LaravelModular\Module\ScanCache;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 
@@ -52,9 +55,25 @@ final class LaravelModularServiceProvider extends ServiceProvider
             $app->bootstrapPath('cache/modular.php'),
         ));
 
-        $this->app->singleton(ProvidesScanner::class, fn ($app): ProvidesScanner => new ProvidesScanner(
+        // Shared by both scanners: one tree walk per module per process, and one
+        // memo file for their results, so an uncompiled boot pays for neither twice.
+        $this->app->singleton(ModuleFiles::class, static fn (): ModuleFiles => new ModuleFiles(new Filesystem));
+
+        $this->app->singleton(ScanCache::class, fn ($app): ScanCache => new ScanCache(
             new Filesystem,
             $app->bootstrapPath('cache/modular-scan.php'),
+        ));
+
+        $this->app->singleton(ProvidesScanner::class, fn ($app): ProvidesScanner => new ProvidesScanner(
+            new Filesystem,
+            $app->make(ScanCache::class),
+            $app->make(ModuleFiles::class),
+        ));
+
+        $this->app->singleton(CommandScanner::class, fn ($app): CommandScanner => new CommandScanner(
+            new Filesystem,
+            $app->make(ScanCache::class),
+            $app->make(ModuleFiles::class),
         ));
 
         $this->loadCompiled();
@@ -70,16 +89,18 @@ final class LaravelModularServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->publishes([
-            __DIR__.'/../config/modules.php' => config_path('modules.php'),
-        ], 'modules-config');
-
-        // Publish stubs so the generated module structure can be customised.
-        $this->publishes([
-            __DIR__.'/../stubs' => base_path('stubs/modular'),
-        ], 'modules-stubs');
-
+        // Publishing and artisan commands are console-only concerns; an HTTP
+        // request should not pay to declare either.
         if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/modules.php' => config_path('modules.php'),
+            ], 'modules-config');
+
+            // Publish stubs so the generated module structure can be customised.
+            $this->publishes([
+                __DIR__.'/../stubs' => base_path('stubs/modular'),
+            ], 'modules-stubs');
+
             $this->commands([
                 ModuleMakeCommand::class,
                 ModuleListCommand::class,
@@ -120,13 +141,11 @@ final class LaravelModularServiceProvider extends ServiceProvider
      */
     private function loadCompiled(): void
     {
-        $cache = $this->app->make(ModuleCache::class);
+        $data = $this->app->make(ModuleCache::class)->load();
 
-        if (! $cache->exists()) {
+        if ($data === null) {
             return;
         }
-
-        $data = $cache->load();
 
         $this->app->instance('modular.compiled', $data);
         $this->app->make(ModuleManager::class)->useCompiled($data['modules']);
@@ -139,14 +158,14 @@ final class LaravelModularServiceProvider extends ServiceProvider
      */
     private function registerModuleAutoloading(): void
     {
-        $autoload = $this->app->basePath('vendor/autoload.php');
+        // The loader Composer already registered, keyed by vendor directory — no
+        // re-including autoload.php on every request just to get a handle on it.
+        $loaders = ClassLoader::getRegisteredLoaders();
+        $loader = $loaders[$this->app->basePath('vendor')] ?? (reset($loaders) ?: null);
 
-        if (! is_file($autoload)) {
+        if (! $loader instanceof ClassLoader) {
             return;
         }
-
-        /** @var ClassLoader $loader */
-        $loader = require $autoload;
 
         /** @var string $namespace */
         $namespace = config('modules.namespace');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dem1Off\LaravelModular\Console;
 
 use Dem1Off\LaravelModular\Manager\ModuleManager;
+use Dem1Off\LaravelModular\Module\ModuleFiles;
 use Dem1Off\LaravelModular\Operations\ModuleLayout;
 use Dem1Off\LaravelModular\Operations\ScaffoldModule;
 use Illuminate\Console\Command;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
 final class ModuleMakeCommand extends Command
 {
     protected $signature = 'make:module {name : The studly-cased module name}
-        {--layout= : Layout preset: ddd|simple|contracts (defaults to config modules.layout)}
+        {--layout= : Layout preset: ddd|simple|contracts|clean (defaults to config modules.layout)}
         {--force : Overwrite the module if it already exists}';
 
     protected $description = 'Scaffold a new module (promotion-ready Composer package)';
@@ -28,7 +29,7 @@ final class ModuleMakeCommand extends Command
         parent::__construct();
     }
 
-    public function handle(ModuleManager $manager): int
+    public function handle(ModuleManager $manager, ModuleFiles $moduleFiles): int
     {
         /** @var string $name */
         $name = $this->argument('name');
@@ -56,6 +57,7 @@ final class ModuleMakeCommand extends Command
         $scaffold->execute($module, $layout, $path, $namespace, $vendor);
 
         $manager->flush();
+        $moduleFiles->flush();
         $manager->setStatus($module, true);
 
         $this->components->info("Module [{$module}] created at {$path}");

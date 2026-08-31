@@ -44,6 +44,24 @@ it('scaffolds a contracts module', function () {
     expect(file_get_contents($path.'/src/Providers/SharedServiceProvider.php'))->toContain('extends ModuleServiceProvider');
 });
 
+it('scaffolds a clean module with nothing but a namespace and a provider', function () {
+    $this->artisan('make:module', ['name' => 'Shop', '--layout' => 'clean'])->assertSuccessful();
+
+    $path = $this->modulesPath.'/Shop';
+
+    expect(is_file($path.'/src/Providers/ShopServiceProvider.php'))->toBeTrue()
+        ->and(is_file($path.'/composer.json'))->toBeTrue()
+        ->and(is_file($path.'/module.json'))->toBeTrue();
+
+    // Every convention folder is opt-in — none is created up front.
+    foreach (['config', 'database', 'lang', 'resources', 'routes', 'tests'] as $folder) {
+        expect(is_dir($path.'/'.$folder))->toBeFalse();
+    }
+
+    // And only the provider lives under src/.
+    expect(iterator_count(new FilesystemIterator($path.'/src')))->toBe(1);
+});
+
 it('enables the new module in the statuses file', function () {
     $this->artisan('make:module', ['name' => 'Shop'])->assertSuccessful();
 

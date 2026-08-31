@@ -166,6 +166,6 @@ public function boot(): void
 ## Performance
 
 Attributes are read by reflection in development. In production,
-`php artisan module:cache` compiles every module's settings (and discovery) into
-a single PHP file, so a request does **zero reflection and zero filesystem
-scanning**. See [Performance](/advanced/performance).
+`php artisan module:cache` compiles every module's settings, discovery and
+resolved convention folders into a single PHP file, so a request does **zero
+reflection and no filesystem access**. See [Performance](/advanced/performance).

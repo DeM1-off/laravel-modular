@@ -5,6 +5,20 @@ All notable changes are tracked in
 following [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## 1.6.0 — 2026-08-31
+
+### Added
+- `make:module --layout=clean` — scaffolds a module with nothing but a namespace
+  and a provider; every convention folder is opt-in.
+
+### Changed
+- `module:cache` compiles each module's resolved convention paths, so a cached
+  boot does no `is_file`/`is_dir` checks per module. Adding a convention folder
+  now needs a cache rebuild to take effect (development is unaffected).
+- Publishing and artisan command registration happen on console boots only.
+- Cheaper development scanning: one shared tree walk per module, memoised
+  command discovery, and source-text filtering before reflection.
+
 ## 1.5.0 — 2026-07-02
 
 ### Added

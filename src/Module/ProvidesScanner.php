@@ -17,9 +17,15 @@ use Symfony\Component\Finder\SplFileInfo;
  *
  * Runs in development (lazily, over the module's own files) and at compile time
  * for `module:cache` — the same logic feeds both, so dev and production agree.
- * In development the result is memoised to a small file keyed by the module's
- * file count and newest mtime, so unchanged modules aren't re-reflected each
- * request.
+ * In development the result is memoised against the module's change signature,
+ * so unchanged modules aren't re-reflected each request.
+ *
+ * Reflection is the expensive part, because reaching a class autoloads and
+ * compiles it. Files are therefore filtered on their source text first: an
+ * attribute cannot be named dynamically, so a file that binds something must
+ * mention the attribute's short name — via a `use` import or inline. Reading a
+ * file is far cheaper than compiling a class, so on a cold scan only the
+ * handful of files that actually declare bindings are loaded.
  *
  * @phpstan-import-type Bindings from AttributeParser
  * @phpstan-import-type Tags from AttributeParser
@@ -28,10 +34,18 @@ use Symfony\Component\Finder\SplFileInfo;
  */
 final class ProvidesScanner
 {
+    private readonly ModuleFiles $listing;
+
+    private readonly ScanCache $cache;
+
     public function __construct(
         private readonly Filesystem $files,
-        private readonly ?string $cachePath = null,
-    ) {}
+        ?ScanCache $cache = null,
+        ?ModuleFiles $listing = null,
+    ) {
+        $this->cache = $cache ?? new ScanCache($files);
+        $this->listing = $listing ?? new ModuleFiles($files);
+    }
 
     /**
      * @param  string  $rootNamespace  e.g. "Modules\Blog"
@@ -45,30 +59,22 @@ final class ProvidesScanner
             return ['binds' => [], 'tags' => []];
         }
 
-        $phpFiles = array_filter(
-            $this->files->allFiles($base),
-            static fn ($file): bool => $file->getExtension() === 'php',
-        );
+        ['files' => $files, 'signature' => $signature] = $this->listing->php($base);
 
-        $signature = $this->signature($phpFiles);
-        $cache = $this->readCache();
+        $key = 'provides:'.$base;
 
-        if (isset($cache[$base]) && $cache[$base]['signature'] === $signature) {
-            return $cache[$base]['result'];
+        /** @var ScanResult|null $cached */
+        $cached = $this->cache->get($key, $signature);
+
+        if ($cached !== null) {
+            return $cached;
         }
 
-        $result = $this->reflect($phpFiles, $rootNamespace, $base);
+        $result = $this->reflect($files, $rootNamespace, $base);
 
-        $this->writeCache($base, $signature, $result, $cache);
+        $this->cache->put($key, $signature, $result);
 
         return $result;
-    }
-
-    public function clearCache(): void
-    {
-        if ($this->cachePath !== null && $this->files->exists($this->cachePath)) {
-            $this->files->delete($this->cachePath);
-        }
     }
 
     /**
@@ -81,6 +87,10 @@ final class ProvidesScanner
         $tags = [];
 
         foreach ($files as $file) {
+            if (! $this->mayBind($file)) {
+                continue;
+            }
+
             $relative = ltrim(substr($file->getPathname(), strlen($base)), '/\\');
 
             /** @var class-string $class */
@@ -104,6 +114,39 @@ final class ProvidesScanner
         }
 
         return ['binds' => $binds, 'tags' => $tags];
+    }
+
+    /**
+     * Whether a file's source even mentions one of the binding attributes.
+     *
+     * Short names, not FQCNs: an aliased import (`use Provides as P`) still
+     * carries the short name in its `use` line, so this cannot produce a false
+     * negative — only skip files that plainly declare nothing.
+     */
+    private function mayBind(SplFileInfo $file): bool
+    {
+        $source = $file->getContents();
+
+        foreach (self::markers() as $marker) {
+            if (str_contains($source, $marker)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function markers(): array
+    {
+        static $markers = null;
+
+        return $markers ??= array_map(
+            static fn (string $attribute): string => substr((string) strrchr($attribute, '\\'), 1),
+            [Provides::class, Singleton::class, Scoped::class],
+        );
     }
 
     /**
@@ -145,52 +188,5 @@ final class ProvidesScanner
         $interfaces = $reflection->getInterfaceNames();
 
         return count($interfaces) === 1 ? $interfaces[0] : null;
-    }
-
-    /**
-     * Newest mtime plus file count: changes on edit, add or delete.
-     *
-     * @param  array<int, SplFileInfo>  $files
-     */
-    private function signature(array $files): string
-    {
-        $newest = 0;
-
-        foreach ($files as $file) {
-            $newest = max($newest, (int) $file->getMTime());
-        }
-
-        return $newest.':'.count($files);
-    }
-
-    /**
-     * @return array<string, array{signature: string, result: ScanResult}>
-     */
-    private function readCache(): array
-    {
-        if ($this->cachePath === null || ! $this->files->exists($this->cachePath)) {
-            return [];
-        }
-
-        /** @var array<string, array{signature: string, result: ScanResult}> $cache */
-        $cache = require $this->cachePath;
-
-        return $cache;
-    }
-
-    /**
-     * @param  ScanResult  $result
-     * @param  array<string, array{signature: string, result: ScanResult}>  $cache
-     */
-    private function writeCache(string $base, string $signature, array $result, array $cache): void
-    {
-        if ($this->cachePath === null) {
-            return;
-        }
-
-        $cache[$base] = ['signature' => $signature, 'result' => $result];
-
-        $this->files->ensureDirectoryExists(dirname($this->cachePath));
-        $this->files->put($this->cachePath, '<?php return '.var_export($cache, true).';'.PHP_EOL);
     }
 }

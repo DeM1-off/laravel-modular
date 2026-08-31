@@ -24,14 +24,18 @@ final class ModuleCache
     }
 
     /**
-     * @return array{modules: array<string, mixed>, settings: array<string, mixed>}
+     * The compiled data, or null when no cache has been built. Reading is a
+     * single include — the caller does not stat the file first, and opcache
+     * keeps the compiled array in memory between requests.
+     *
+     * @return array{modules: array<string, mixed>, settings: array<string, mixed>}|null
      */
-    public function load(): array
+    public function load(): ?array
     {
-        /** @var array{modules: array<string, mixed>, settings: array<string, mixed>} $data */
-        $data = require $this->path;
+        /** @var array{modules: array<string, mixed>, settings: array<string, mixed>}|false $data */
+        $data = @include $this->path;
 
-        return $data;
+        return $data === false ? null : $data;
     }
 
     /**

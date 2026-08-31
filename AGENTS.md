@@ -119,9 +119,14 @@ which is console-free and unit-testable without artisan:
 - `Manager/` (`ModuleManager`, `ModuleDescriptor`) is the domain/query layer.
   `ModuleManager::all()` orders by priority, then topologically by `requires`.
 - `Module/` holds the runtime: `ModuleServiceProvider` (convention loading),
-  `AttributeParser`, `ProvidesScanner` (#[Provides] auto-binding) and
-  `CommandScanner` (Console-directory command discovery) — the scanners run
-  live in dev and feed `CompileModuleCache` for production.
+  `AttributeParser`, `ModulePaths` (which convention folders a module ships),
+  `ProvidesScanner` (#[Provides] auto-binding) and `CommandScanner`
+  (Console-directory command discovery), over two shared helpers —
+  `ModuleFiles` (one tree walk per module per process) and `ScanCache` (the
+  signature-keyed dev memo file). The scanners and `ModulePaths` run live in
+  dev and feed `CompileModuleCache` for production; anything added to the
+  compiled `Settings` shape must be resolvable both ways, and old caches
+  missing the key must still boot.
 
 When adding a command with real logic, **put the logic in an Operation and keep
 the command thin** — match this pattern. Trivial queries that just delegate to

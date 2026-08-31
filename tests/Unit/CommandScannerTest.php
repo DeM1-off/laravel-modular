@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Dem1Off\LaravelModular\Module\CommandScanner;
+use Dem1Off\LaravelModular\Module\ScanCache;
 use Dem1Off\LaravelModular\Tests\Fixtures\ConsoleSample\Console\AbstractSampleCommand;
 use Dem1Off\LaravelModular\Tests\Fixtures\ConsoleSample\Console\ConsoleHelper;
 use Dem1Off\LaravelModular\Tests\Fixtures\ConsoleSample\Console\GreetCommand;
@@ -32,4 +33,28 @@ it('skips abstract classes, non-commands and commands outside Console directorie
 
 it('returns nothing when the app folder is missing', function () {
     expect(scanConsoleSample('src/'))->toBe([]);
+});
+
+it('memoises scan results to a file', function () {
+    $cacheFile = sys_get_temp_dir().'/lm-commands-'.uniqid().'.php';
+    $scanner = new CommandScanner(new Filesystem, new ScanCache(new Filesystem, $cacheFile));
+
+    $first = $scanner->scan(
+        __DIR__.'/../Fixtures/ConsoleSample',
+        'Dem1Off\\LaravelModular\\Tests\\Fixtures\\ConsoleSample',
+        '',
+    );
+
+    expect(file_exists($cacheFile))->toBeTrue()
+        ->and($first)->toBe([GreetCommand::class]);
+
+    $second = $scanner->scan(
+        __DIR__.'/../Fixtures/ConsoleSample',
+        'Dem1Off\\LaravelModular\\Tests\\Fixtures\\ConsoleSample',
+        '',
+    );
+
+    expect($second)->toBe($first);
+
+    @unlink($cacheFile);
 });

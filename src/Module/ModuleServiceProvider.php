@@ -17,18 +17,24 @@ use Illuminate\Support\Str;
  * and console commands load automatically when their folders exist. Wiring is
  * attribute-driven — #[Bind], #[Listen] and an optional #[Module] override.
  *
- * Fast by design: attribute settings come from the compiled cache when present
- * (`module:cache`), so a production request does zero reflection. Without a
- * cache it reflects once per provider and memoises the result.
+ * Fast by design: attribute settings *and* the resolved convention paths come
+ * from the compiled cache when present (`module:cache`), so a production
+ * request does zero reflection and touches the filesystem zero times — a module
+ * that ships none of the optional folders costs nothing at boot. Without a
+ * cache it reflects and resolves once per provider and memoises the result.
  *
  * @phpstan-import-type Settings from AttributeParser
  * @phpstan-import-type Bindings from AttributeParser
  * @phpstan-import-type Tags from AttributeParser
+ * @phpstan-import-type Paths from ModulePaths
  */
 abstract class ModuleServiceProvider extends ServiceProvider
 {
     /** @var Settings|null */
     private ?array $settings = null;
+
+    /** @var Paths|null */
+    private ?array $paths = null;
 
     private ?string $name = null;
 
@@ -69,26 +75,26 @@ abstract class ModuleServiceProvider extends ServiceProvider
         }
 
         $settings = $this->settings();
+        $paths = $this->paths();
 
-        if ($settings['config']) {
-            $this->loadConfig();
+        if ($paths['config'] !== null) {
+            $this->mergeConfigFrom($paths['config'], Str::kebab($this->name()));
         }
 
-        if ($settings['migrations']) {
-            $this->loadMigrations();
+        if ($paths['migrations'] !== null) {
+            $this->loadMigrationsFrom($paths['migrations']);
         }
 
-        if ($settings['views']) {
-            $this->loadViews();
+        if ($paths['views'] !== null) {
+            $this->loadViewsFrom($paths['views'], $this->lower());
         }
 
-        if ($settings['routes']) {
-            $this->loadRoutes();
+        if ($paths['lang'] !== null) {
+            $this->loadTranslationsFrom($paths['lang'], $this->lower());
+            $this->loadJsonTranslationsFrom($paths['lang']);
         }
 
-        if ($settings['lang']) {
-            $this->loadTranslations();
-        }
+        $this->loadRoutes($paths['routes']);
 
         foreach ($settings['listens'] as $listen) {
             Event::listen($listen['event'], $listen['listener']);
@@ -99,6 +105,8 @@ abstract class ModuleServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
+            $this->registerPublishing($paths);
+
             $commands = $this->consoleCommands($settings['commands']);
 
             if ($commands !== []) {
@@ -107,70 +115,58 @@ abstract class ModuleServiceProvider extends ServiceProvider
         }
     }
 
-    private function loadConfig(): void
+    /**
+     * The module's convention folders, from the compiled cache when present.
+     *
+     * Uncompiled this resolves once per provider; compiled it is a plain array
+     * read, so nothing here stats the filesystem on a production request.
+     *
+     * @return Paths
+     */
+    private function paths(): array
     {
-        $dir = module_path($this->name(), 'config');
-        $file = $dir.'/'.$this->lower().'.php';
-
-        if (! is_file($file)) {
-            $file = $dir.'/config.php';
+        if ($this->paths !== null) {
+            return $this->paths;
         }
 
-        if (is_file($file)) {
-            $this->mergeConfigFrom($file, Str::kebab($this->name()));
-        }
+        $settings = $this->settings();
+
+        return $this->paths = $settings['paths']
+            ?? ModulePaths::resolve(module_path($this->name()), $this->name(), $settings);
     }
 
-    private function loadMigrations(): void
-    {
-        $path = module_path($this->name(), 'database/migrations');
-
-        if (is_dir($path)) {
-            $this->loadMigrationsFrom($path);
-        }
-    }
-
-    private function loadViews(): void
-    {
-        $path = module_path($this->name(), 'resources/views');
-
-        if (is_dir($path)) {
-            $this->loadViewsFrom($path, $this->lower());
-            $this->publishes([$path => resource_path('views/modules/'.$this->lower())], 'modules-views');
-        }
-    }
-
-    private function loadRoutes(): void
+    /**
+     * @param  array{web: string|null, api: string|null}  $routes
+     */
+    private function loadRoutes(array $routes): void
     {
         if ($this->app->routesAreCached()) {
             return;
         }
 
-        $web = module_path($this->name(), 'routes/web.php');
-
-        if (is_file($web)) {
-            Route::middleware('web')->group($web);
+        if ($routes['web'] !== null) {
+            Route::middleware('web')->group($routes['web']);
         }
 
-        $api = module_path($this->name(), 'routes/api.php');
-
-        if (is_file($api)) {
-            Route::middleware('api')->prefix('api')->group($api);
+        if ($routes['api'] !== null) {
+            Route::middleware('api')->prefix('api')->group($routes['api']);
         }
     }
 
-    private function loadTranslations(): void
+    /**
+     * Publishable paths only matter to `vendor:publish`, so they are declared
+     * on console boots only — an HTTP request never builds these arrays.
+     *
+     * @param  Paths  $paths
+     */
+    private function registerPublishing(array $paths): void
     {
-        $path = module_path($this->name(), 'lang');
-
-        if (! is_dir($path)) {
-            $path = module_path($this->name(), 'resources/lang');
+        if ($paths['views'] !== null) {
+            $this->publishes([$paths['views'] => resource_path('views/modules/'.$this->lower())], 'modules-views');
         }
 
-        if (is_dir($path)) {
-            $this->loadTranslationsFrom($path, $this->lower());
-            $this->loadJsonTranslationsFrom($path);
-            $this->publishes([$path => lang_path('modules/'.$this->lower())], 'modules-lang');
+        if ($paths['lang'] !== null) {
+            $this->publishes([$paths['lang'] => lang_path('modules/'.$this->lower())], 'modules-lang');
         }
     }
 

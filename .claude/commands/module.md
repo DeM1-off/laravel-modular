@@ -20,7 +20,7 @@ by hand — always go through the commands so the structure stays promotion-read
 
 | Intent | Command |
 | --- | --- |
-| Create / scaffold a module | `php artisan make:module {Name} [--layout=ddd\|simple\|contracts]` |
+| Create / scaffold a module | `php artisan make:module {Name} [--layout=ddd\|simple\|contracts\|clean]` |
 | List modules + status | `php artisan module:list` |
 | Enable / disable (boot gating only) | `php artisan module:enable {Name}` / `module:disable {Name}` |
 | Diagnose setup | `php artisan module:check` |

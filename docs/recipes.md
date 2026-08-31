@@ -233,5 +233,7 @@ See [How it works](/advanced/how-it-works) and
 php artisan module:cache    # or: php artisan optimize
 ```
 
-Compiles discovery and attributes into one file — zero reflection, zero
-filesystem scanning per request. See [Performance](/advanced/performance).
+Compiles discovery, attributes and each module's resolved convention folders
+into one file — zero reflection, zero filesystem scanning per request. Rebuild
+after adding a folder like `routes/` to a module, the same as `config:cache`.
+See [Performance](/advanced/performance).

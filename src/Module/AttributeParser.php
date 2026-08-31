@@ -17,9 +17,16 @@ use ReflectionClass;
  * command. The output is pure scalars/arrays, so it serialises straight into
  * the compiled cache — at runtime nothing reflects, it just reads this shape.
  *
+ * `paths` is left null here: the attributes only say *whether* a convention
+ * folder should load, not where it is. {@see ModulePaths} resolves that, live
+ * on an uncompiled boot or once at compile time.
+ *
  * @phpstan-type Bindings list<array{abstract: class-string, concrete: class-string, lifetime: 'bind'|'singleton'|'scoped'}>
  * @phpstan-type Tags list<array{tag: string, concrete: class-string}>
- * @phpstan-type Settings array{name: string|null, config: bool, migrations: bool, views: bool, routes: bool, lang: bool, commands: list<class-string>, binds: Bindings, listens: list<array{event: class-string, listener: class-string}>, middleware: list<array{name: string, class: class-string}>, tags: Tags}
+ *
+ * @phpstan-import-type Paths from ModulePaths
+ *
+ * @phpstan-type Settings array{name: string|null, config: bool, migrations: bool, views: bool, routes: bool, lang: bool, commands: list<class-string>, binds: Bindings, listens: list<array{event: class-string, listener: class-string}>, middleware: list<array{name: string, class: class-string}>, tags: Tags, paths: Paths|null}
  */
 final class AttributeParser
 {
@@ -68,6 +75,7 @@ final class AttributeParser
             'listens' => $listens,
             'middleware' => $middleware,
             'tags' => [],
+            'paths' => null,
         ];
     }
 }

@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ provider_namespace }};
+
+use Dem1Off\LaravelModular\Module\ModuleServiceProvider;
+
+/**
+ * A clean module: a namespace and this provider, nothing else.
+ *
+ * Every convention folder is opt-in — create the one you need and it loads
+ * itself, no registration required:
+ *
+ *   config/{{ module_lower }}.php     merged under the "{{ module_kebab }}" key
+ *   database/migrations/     loaded
+ *   resources/views/         namespaced "{{ module_lower }}::"
+ *   routes/web.php           grouped behind the "web" middleware
+ *   routes/api.php           grouped behind "api", prefixed /api
+ *   lang/                    namespaced "{{ module_lower }}::"
+ *   src/.../Console/         artisan commands, discovered by convention
+ *
+ * Folders are resolved once and baked into `module:cache`, so a module that
+ * stays clean costs nothing at boot — but run `php artisan module:cache` (or
+ * `optimize`) after adding one, the same as `config:cache`.
+ *
+ * Wire the container with attributes, e.g.:
+ *
+ *   #[Bind(PostRepositoryInterface::class, EloquentPostRepository::class)]
+ *   #[Listen(ChapterPublished::class, SendDigest::class)]
+ */
+final class {{ module }}ServiceProvider extends ModuleServiceProvider {}

@@ -23,6 +23,9 @@ final class ModuleManager
     /** @var array<string, ModuleDescriptor>|null */
     private ?array $cache = null;
 
+    /** @var array<string, ModuleDescriptor>|null */
+    private ?array $enabled = null;
+
     /** @var array<string, bool>|null */
     private ?array $statuses = null;
 
@@ -90,7 +93,7 @@ final class ModuleManager
      */
     public function enabled(): array
     {
-        return array_filter($this->all(), static fn (ModuleDescriptor $m): bool => $m->enabled);
+        return $this->enabled ??= array_filter($this->all(), static fn (ModuleDescriptor $m): bool => $m->enabled);
     }
 
     public function find(string $name): ?ModuleDescriptor
@@ -148,6 +151,7 @@ final class ModuleManager
     public function flush(): void
     {
         $this->cache = null;
+        $this->enabled = null;
         $this->statuses = null;
     }
 
@@ -174,6 +178,7 @@ final class ModuleManager
         }
 
         $this->cache = $descriptors;
+        $this->enabled = null;
     }
 
     /**
